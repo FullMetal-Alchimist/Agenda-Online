@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FenLauncher</class>
+ <widget class="QDialog" name="FenLauncher">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>FenLauncher</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QCommandLinkButton" name="commandLinkButton_3">
+     <property name="text">
+      <string>Lancer le Serveur(Debug)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QCommandLinkButton" name="commandLinkButton">
+     <property name="text">
+      <string>Lancer le Client (Debug)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QCommandLinkButton" name="commandLinkButton_2">
+     <property name="text">
+      <string>Lancer le Client (Release)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QCommandLinkButton" name="commandLinkButton_4">
+     <property name="text">
+      <string>Lancer le Serveur(Release)</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>
