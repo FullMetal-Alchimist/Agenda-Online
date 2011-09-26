@@ -7,5 +7,27 @@
 
 #ifndef HANDLES_HPP
 #define HANDLES_HPP
+#include <QMap>
+#include <QStringList>
+
+class Handler;
+
+struct ChatCommand
+{
+    QString Nom;
+    int Level;
+    bool AllowConsole;
+    void (Handler::*Func) (QStringList const& args);
+    QString Help;
+    ChatCommand* ChildCommands;
+};
+
+class Handler
+{
+public:
+    ChatCommand* GetTable();
+
+    bool CheckIfLevelIsOk(Client const& client) const;
+};
 
 #endif // HANDLES_HPP
