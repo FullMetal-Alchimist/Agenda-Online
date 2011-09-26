@@ -10,8 +10,8 @@ HEADERS += \
     FenPrincipale.hpp \
     Devoir.hpp \
     ChatServer.hpp \
-    Commands.hpp \
-    Handles.hpp
+    Handles.hpp \
+    Client.hpp
 
 SOURCES += \
     SQLServerSupervisor.cpp \
@@ -21,11 +21,15 @@ SOURCES += \
     FenPrincipale.cpp \
     Devoir.cpp \
     ChatServer.cpp \
-    Commands.cpp \
-    Handles.cpp
+    Handles.cpp \
+    Client.cpp
 
 FORMS += \
     FenPrincipale.ui
+
+
+
+
 
 
 
