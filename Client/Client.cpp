@@ -9,6 +9,8 @@ Client::Client(QObject *parent) :
     connect(socket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
     connect(socket, SIGNAL(readyRead()), this, SLOT(receiveData()));
 
+    Authentified = false;
+
     taillePacket = 0;
 
 }
@@ -40,11 +42,13 @@ void Client::processCode(quint8 code)
     }
     case SMSG_AUTHENTIFICATION_FAILED:
     {
+        Authentified = false;
         emit message(tr("Authentification raté! Vous êtes maintenant non authentifié(e)."));
         break;
     }
     case SMSG_YOU_ARE_NOT_AUTHENTIFIED:
     {
+        Authentified = false;
         emit message(tr("Impossible de demander les devoirs car nous sommes considérés comme non authentifié(e) !!"));
         break;
     }
