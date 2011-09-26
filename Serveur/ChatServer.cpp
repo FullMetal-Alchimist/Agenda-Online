@@ -21,11 +21,15 @@ ChatServer::~ChatServer()
 
 void ChatServer::AddClient(QTcpSocket *socket, const QString &nom, const QString &classe)
 {
+    QMutexLocker m(&mutex);
+
     clientsBySocket.insert(socket, QPair<QString, QString>(nom, classe));
     clientsByNameAndClass.insert(QPair<QString, QString>(nom, classe), socket);
 }
 void ChatServer::SendMessageAt(const QString &nom, const QString &message, const QString &classe)
 {
+    QMutexLocker m(&mutex);
+
     QByteArray paquet;
     QDataStream out(&paquet, QIODevice::WriteOnly);
 

@@ -33,6 +33,8 @@ public:
     bool RemoveHomework(QString const& nom);
     //bool UpdateHomework(QString const& nom, QString const& sujet, QString const& matiere, QString const& classe);
 
+    QMap<
+
     static SQLServerSupervisor* GetInstance();
     static bool Kill();
 
@@ -49,7 +51,7 @@ protected:
     QSqlDatabase db;
     QSqlQuery* query;
 
-    mutable QMutex mutex;
+    static mutable QMutex mutex;
 
     static SQLServerSupervisor* _instance;
 };

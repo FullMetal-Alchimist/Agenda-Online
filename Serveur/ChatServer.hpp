@@ -42,6 +42,8 @@ protected:
     QMap<QTcpSocket*, QPair<QString, QString> > clientsBySocket;
     QMap<QPair<QString, QString>, QTcpSocket* > clientsByNameAndClass;
 
+    mutable QMutex mutex;
+
     static ChatServer* _instance;
 
 };

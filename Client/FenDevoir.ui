@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -93,45 +93,41 @@
        <string>Contrôle administrateur(nécessite des droits spéciaux)</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <widget class="QPushButton" name="pushButton">
-         <property name="text">
-          <string>Afficher la liste des connectés (Profs et Admin)</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QPushButton" name="pushButton_2">
-         <property name="text">
-          <string>BALANCE TA SIBOULETTE MULTI COLORE !! (Kimberley uniquement)</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="pushButton_3">
-         <property name="text">
-          <string>Créer un compte (Admins uniquement)</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="pushButton_4">
-         <property name="text">
-          <string>Supprimer un compte (Admin uniquement)</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="0">
-        <widget class="QPushButton" name="pushButton_5">
+        <widget class="QPushButton" name="CreateAccount">
          <property name="text">
-          <string>Créer un devoir (Profs et Admin)</string>
+          <string>Créer un compte</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QPushButton" name="pushButton_6">
+        <widget class="QPushButton" name="DeleteAccount">
          <property name="text">
-          <string>Supprimer un devoir (Profs et Admin)</string>
+          <string>Supprimer un compte</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="CreateDevoir">
+         <property name="text">
+          <string>Créer un devoir</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QPushButton" name="DeleteDevoir">
+         <property name="text">
+          <string>Supprimer un devoir</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QTableView" name="clientsConnectes"/>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QPushButton" name="sendSystemMessage">
+         <property name="text">
+          <string>Envoyer un message système</string>
          </property>
         </widget>
        </item>

@@ -8,6 +8,7 @@
 #include "SQLServerSupervisor.hpp"
 
 SQLServerSupervisor* SQLServerSupervisor::_instance = NULL;
+QMutex SQLServerSupervisor::mutex = QMutex();
 
 SQLServerSupervisor::SQLServerSupervisor() :
     QObject()
@@ -211,7 +212,6 @@ QStringList SQLServerSupervisor::GetAllMatiere()
 
 bool SQLServerSupervisor::Kill()
 {
-    QMutex mutex;
     QMutexLocker locker(&mutex);
 
     if(_instance != NULL)
@@ -221,11 +221,9 @@ bool SQLServerSupervisor::Kill()
 }
 SQLServerSupervisor* SQLServerSupervisor::GetInstance()
 {
-    QMutex mutex;
-    QMutexLocker locker(&mutex);
-
     if(_instance == NULL)
     {
+        QMutexLocker locker(&mutex);
         if(_instance == NULL)
         {
             _instance = new SQLServerSupervisor;
