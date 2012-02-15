@@ -23,40 +23,40 @@ void Client::processCode(quint8 code)
 {
     switch(code)
     {
-    case SMSG_PING:
-    {
-        emit message(tr("Pong envoyé."));
-        SendPong();
-        break;
-    }
-    case SMSG_PONG:
-    {
-        emit message(tr("Pong!"));
-        break;
-    }
-    case SMSG_AUTHENTIFICATION_SUCCESS:
-    {
-        Authentified = true;
-        emit message(tr("Authentification réussi! Vous êtes maintenant connecté(e) et authentifié(e)."));
-        break;
-    }
-    case SMSG_AUTHENTIFICATION_FAILED:
-    {
-        Authentified = false;
-        emit message(tr("Authentification raté! Vous êtes maintenant non authentifié(e)."));
-        break;
-    }
-    case SMSG_YOU_ARE_NOT_AUTHENTIFIED:
-    {
-        Authentified = false;
-        emit message(tr("Impossible de demander les devoirs car nous sommes considérés comme non authentifié(e) !!"));
-        break;
-    }
+        case SMSG_PING:
+        {
+            emit message(tr("Pong envoyé."));
+            SendPong();
+            break;
+        }
+        case SMSG_PONG:
+        {
+            emit message(tr("Pong!"));
+            break;
+        }
+        case SMSG_AUTHENTIFICATION_SUCCESS:
+        {
+            Authentified = true;
+            emit message(tr("Authentification réussi! Vous êtes maintenant connecté(e) et authentifié(e)."));
+            break;
+        }
+        case SMSG_AUTHENTIFICATION_FAILED:
+        {
+            Authentified = false;
+            emit message(tr("Authentification raté! Vous êtes maintenant non authentifié(e)."));
+            break;
+        }
+        case SMSG_YOU_ARE_NOT_AUTHENTIFIED:
+        {
+            Authentified = false;
+            emit message(tr("Impossible de demander les devoirs car nous sommes considérés comme non authentifié(e) !!"));
+            break;
+        }
 
-    default:
-    {
-        emit message(tr("Header inconnu envoyé. (0x%1)").arg(QString::number(code, 16).toUpper()));
-    }
+        default:
+        {
+            emit message(tr("Header inconnu envoyé. (0x%1)").arg(QString::number(code, 16).toUpper()));
+        }
     }
 }
 void Client::receiveData()
@@ -113,6 +113,14 @@ void Client::receiveData()
         in >> matieres;
 
         emit newListMatieres(matieres);
+    }
+    else if(code == SMSG_KICK)
+    {
+        QString reason;
+        in >> reason;
+
+        socket->disconnectFromHost();
+        emit message("Kicked from Server");
     }
     else
         processCode(code);
@@ -259,18 +267,18 @@ void Client::error(QAbstractSocket::SocketError error)
 {
     switch(error)
     {
-    case QAbstractSocket::ConnectionRefusedError:
-        emit displayError(tr("La connexion a été refusé par l'hôte dû peut-être à un temps de latence trop grand...."));
-        break;
-    case QAbstractSocket::RemoteHostClosedError:
-        emit displayError(tr("L'hôte a coupé la connexion."));
-        break;
-    case QAbstractSocket::HostNotFoundError:
-        emit displayError(tr("Erreur... L'agendaileur n'a pas été trouvé..."));
-        break;
-    default:
-        emit displayError(socket->errorString());
-        break;
+        case QAbstractSocket::ConnectionRefusedError:
+            emit displayError(tr("La connexion a été refusé par l'hôte dû peut-être à un temps de latence trop grand...."));
+            break;
+        case QAbstractSocket::RemoteHostClosedError:
+            emit displayError(tr("L'hôte a coupé la connexion."));
+            break;
+        case QAbstractSocket::HostNotFoundError:
+            emit displayError(tr("Erreur... L'agendaileur n'a pas été trouvé..."));
+            break;
+        default:
+            emit displayError(socket->errorString());
+            break;
     }
 }
 

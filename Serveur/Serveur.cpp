@@ -1,5 +1,7 @@
 #include "Serveur.hpp"
 
+QMap<QString, Serveur* > Serveur::m_Clients = QMap<QString, Serveur* >();
+
 Serveur::Serveur(int handle, QObject *parent) :
     QThread(parent), myHandle(handle), taillePacket(0), UserName(tr("Un client non authentifié")), threadRunning(true), errorFatal(false)
 {
@@ -21,7 +23,6 @@ void Serveur::run()
 
     while((threadRunning) || (!errorFatal))
     {
-        QMutexLocker locker(&mutex);
         if(myClient->waitForReadyRead(5000))
         {
             emit message(tr("Données reçues depuis %1").arg(UserName));
@@ -60,127 +61,127 @@ void Serveur::processData()
 
     switch(header)
     {
-    case CMSG_MESSAGE_LEGER:
-    {
-        QString messageRecu;
-        in >> messageRecu;
-        QString messageSecondRecu;
-        in >> messageSecondRecu;
-
-        QByteArray encryptedPassword;
-        in >> encryptedPassword;
-
-        emit message(tr("Message léger reçu depuis un client : %1\n%2\n%3").arg(messageRecu, messageSecondRecu, encryptedPassword.toHex()));
-        break;
-    }
-    case CMSG_MESSAGE_CUSTOM:
-    {
-        /** Créer un comportement de test. **/
-        break;
-    }
-    case CMSG_PING:
-    {
-        if(!UserName.startsWith("Un client"))
-            emit message(tr("Ping reçu de %1.").arg(UserName));
-        else
-            emit message(tr("Ping reçu d'un client non authentifié."));
-
-        reponse(SMSG_PONG);
-        break;
-    }
-    case CMSG_PONG:
-    {
-        if(!UserName.startsWith("Un client"))
-            emit message(tr("Pong! Reçu de %1").arg(UserName));
-        else
-            emit message(tr("Pong! Reçu d'un client non authentifié."));
-        break;
-    }
-    case CMSG_MESSAGE_AUTH:
-    {
-        QString userName;
-        in >> userName;
-
-        QByteArray password;
-        in >> password;
-
-        if(SQLServerSupervisor::GetInstance()->Authentificate(userName, password))
+        case CMSG_MESSAGE_LEGER:
         {
-            UserName = userName;
-            Classe = SQLServerSupervisor::GetInstance()->FindClasse(userName);
+            QString messageRecu;
+            in >> messageRecu;
+            QString messageSecondRecu;
+            in >> messageSecondRecu;
 
-            emit message(tr("Tentative d'authentification de %1 réussi !").arg(userName));
-            emit newClient(userName, Classe);
+            QByteArray encryptedPassword;
+            in >> encryptedPassword;
 
-            reponse(SMSG_AUTHENTIFICATION_SUCCESS);
-        }
-        else
-        {
-            emit message(tr("Tentative d'authentification de %1 raté !").arg(userName));
-            reponse(SMSG_AUTHENTIFICATION_FAILED);
-        }
-
-        break;
-    }
-    case CMSG_MESSAGE_HOMEWORKFOR:
-    {
-        if(UserName.startsWith("Un client"))
-        {
-            reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
-            emit message(tr("Demande de devoir de la part d'un client non authentifié !! (Refusé)"));
+            emit message(tr("Message léger reçu depuis un client : %1\n%2\n%3").arg(messageRecu, messageSecondRecu, encryptedPassword.toHex()));
             break;
         }
-        QString matiere = tr("all");
-        bool needOnlyMatiere;
-        in >> needOnlyMatiere;
-
-        if(needOnlyMatiere)
-            in >> matiere;
-
-        emit message(tr("Demande de devoir reçu de la part de %1 en classe de %2").arg(UserName, Classe));
-
-        QList<Devoir> devoirs = SQLServerSupervisor::GetInstance()->LoadHomeworks(Classe, matiere);
-        SendHomeworks(devoirs);
-        break;
-    }
-    case CMSG_MESSAGE_CHAT:
-    {
-        if(UserName.startsWith("Un client"))
+        case CMSG_MESSAGE_CUSTOM:
         {
-            reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
-            emit message(tr("Message envoyé d'un client inconnu."));
+            /** Créer un comportement de test. **/
             break;
         }
-
-        QString messageChat;
-        in >> messageChat;
-
-        emit message(tr("Message envoyé par Chat de la part de %1, contenu(%2)").arg(UserName, messageChat));
-
-        if(ChatServer::GetInstance()->HasClient(myClient))
+        case CMSG_PING:
         {
-            ChatServer::GetInstance()->SendMessageAt(UserName, messageChat, Classe);
-        }
-        else
-        {
-            ChatServer::GetInstance()->AddClient(myClient, UserName, Classe);
-            ChatServer::GetInstance()->SendMessageAt(UserName, messageChat, Classe);
-        }
-        break;
-    }
-    case CMSG_MESSAGE_LISTMATIERE:
-    {
-        QStringList listMatiere = SQLServerSupervisor::GetInstance()->GetAllMatiereFromClasse(Classe);
-        emit message(tr("Demande des matières disponibles pour la classe %1 de %2").arg(Classe, UserName));
-        SendMatieres(listMatiere);
+            if(!UserName.startsWith("Un client"))
+                emit message(tr("Ping reçu de %1.").arg(UserName));
+            else
+                emit message(tr("Ping reçu d'un client non authentifié."));
 
-        break;
-    }
-    default:
-    {
-        emit message(tr("Header inconnu détecté : 0x%1").arg(QString::number(header, 16).toUpper()));
-        break;
-    }
+            reponse(SMSG_PONG);
+            break;
+        }
+        case CMSG_PONG:
+        {
+            if(!UserName.startsWith("Un client"))
+                emit message(tr("Pong! Reçu de %1").arg(UserName));
+            else
+                emit message(tr("Pong! Reçu d'un client non authentifié."));
+            break;
+        }
+        case CMSG_MESSAGE_AUTH:
+        {
+            QString userName;
+            in >> userName;
+
+            QByteArray password;
+            in >> password;
+
+            if(SQLServerSupervisor::GetInstance()->Authentificate(userName, password))
+            {
+                UserName = userName;
+                Classe = SQLServerSupervisor::GetInstance()->FindClasse(userName);
+
+                emit message(tr("Tentative d'authentification de %1 réussi !").arg(userName));
+                emit newClient(userName, Classe);
+
+                reponse(SMSG_AUTHENTIFICATION_SUCCESS);
+            }
+            else
+            {
+                emit message(tr("Tentative d'authentification de %1 raté !").arg(userName));
+                reponse(SMSG_AUTHENTIFICATION_FAILED);
+            }
+
+            break;
+        }
+        case CMSG_MESSAGE_HOMEWORKFOR:
+        {
+            if(UserName.startsWith("Un client"))
+            {
+                reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
+                emit message(tr("Demande de devoir de la part d'un client non authentifié !! (Refusé)"));
+                break;
+            }
+            QString matiere = tr("all");
+            bool needOnlyMatiere;
+            in >> needOnlyMatiere;
+
+            if(needOnlyMatiere)
+                in >> matiere;
+
+            emit message(tr("Demande de devoir reçu de la part de %1 en classe de %2").arg(UserName, Classe));
+
+            QList<Devoir> devoirs = SQLServerSupervisor::GetInstance()->LoadHomeworks(Classe, matiere);
+            SendHomeworks(devoirs);
+            break;
+        }
+        case CMSG_MESSAGE_CHAT:
+        {
+            if(UserName.startsWith("Un client"))
+            {
+                reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
+                emit message(tr("Message envoyé d'un client inconnu."));
+                break;
+            }
+
+            QString messageChat;
+            in >> messageChat;
+
+            emit message(tr("Message envoyé par Chat de la part de %1, contenu(%2)").arg(UserName, messageChat));
+
+            if(ChatServer::GetInstance()->HasClient(myClient))
+            {
+                ChatServer::GetInstance()->SendMessageAt(UserName, messageChat, Classe);
+            }
+            else
+            {
+                ChatServer::GetInstance()->AddClient(myClient, UserName, Classe);
+                ChatServer::GetInstance()->SendMessageAt(UserName, messageChat, Classe);
+            }
+            break;
+        }
+        case CMSG_MESSAGE_LISTMATIERE:
+        {
+            QStringList listMatiere = SQLServerSupervisor::GetInstance()->GetAllMatiereFromClasse(Classe);
+            emit message(tr("Demande des matières disponibles pour la classe %1 de %2").arg(Classe, UserName));
+            SendMatieres(listMatiere);
+
+            break;
+        }
+        default:
+        {
+            emit message(tr("Header inconnu détecté : 0x%1").arg(QString::number(header, 16).toUpper()));
+            break;
+        }
     }
 
     taillePacket = 0;
@@ -202,7 +203,7 @@ void Serveur::SendHomeworks(const QList<Devoir> &devoirs)
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    myClient->write(paquet);
+    ThreadSafe_Write(paquet);
 }
 
 void Serveur::reponse(quint8 rCode)
@@ -215,7 +216,7 @@ void Serveur::reponse(quint8 rCode)
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    myClient->write(paquet);
+    ThreadSafe_Write(paquet);
 
     emit message(tr("Reponse sended with rCode = %1").arg(QString::number(rCode)));
 }
@@ -230,7 +231,7 @@ void Serveur::SendPing()
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    myClient->write(paquet);
+    ThreadSafe_Write(paquet);
 
     emit message(tr("Ping sended !"));
 }
@@ -246,7 +247,28 @@ void Serveur::SendMatieres(const QStringList &matieres)
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    myClient->write(paquet);
+    ThreadSafe_Write(paquet);
 
     emit message(tr("Matières demandé envoyés."));
+}
+
+void Serveur::Kick(QString Reason)
+{
+    QByteArray paquet;
+    QDataStream out(&paquet, QIODevice::WriteOnly);
+
+    out << (quint16) 0;
+    out << (quint8) SMSG_KICK;
+    out << Reason;
+    out.device()->seek(0);
+    out << (quint16) (paquet.size() - sizeof(quint16));
+
+    ThreadSafe_Write(paquet);
+
+
+    /** By Ryan Lahfa
+        Bye bye my friend of network
+    **/
+
+    myClient->disconnectFromHost();
 }

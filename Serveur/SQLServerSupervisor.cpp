@@ -8,16 +8,17 @@
 #include "SQLServerSupervisor.hpp"
 
 SQLServerSupervisor* SQLServerSupervisor::_instance = NULL;
-QMutex SQLServerSupervisor::mutex = QMutex();
+QMutex* SQLServerSupervisor::_StaticMutex = new QMutex;
 
 SQLServerSupervisor::SQLServerSupervisor() :
     QObject()
 {
-    QMutexLocker m(&mutex);
+    lock.lockForWrite();
     db = QSqlDatabase::addDatabase(tr("QMYSQL"), tr("SQL Server Supervisor"));
     query = new QSqlQuery(db);
 
     OpenDB();
+    lock.unlock();
 }
 SQLServerSupervisor::~SQLServerSupervisor()
 {
@@ -27,11 +28,14 @@ SQLServerSupervisor::~SQLServerSupervisor()
 
 bool SQLServerSupervisor::OpenDB()
 {
+    lock.lockForWrite();
+
     db.setDatabaseName(tr("homework"));
     db.setHostName(tr("127.0.0.1"));
     db.setPassword(tr("748700"));
     db.setUserName(tr("root"));
     db.setPort(3306);
+
 
     return db.open();
 }
@@ -42,13 +46,15 @@ QByteArray SQLServerSupervisor::Hash(const QString &toHash)
 }
 bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArray &Password)
 {
-    QMutexLocker m(&mutex);
+    lock.lockForRead();
+
     query->prepare(tr("SELECT `passwordhashed` FROM `accounts` WHERE `username` = ? LIMIT 1;"));
     query->bindValue(0, UserName);
 
     if(!query->exec())
     {
         emit debug(tr("Erreur lors de l'execution d'une requête d'authentification (Supervisor) : %1").arg(query->lastError().text()));
+        lock.unlock();
         return false;
     }
     else
@@ -56,18 +62,21 @@ bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArr
         query->first();
         QString PasswordHashed = query->value(0).toString();
 
+        lock.unlock();
+
         return PasswordHashed == Password.toHex();
     }
 }
 QString SQLServerSupervisor::FindClasse(const QString &UserName)
 {
-    QMutexLocker m(&mutex);
+    lock.lockForRead();
     query->prepare(tr("SELECT `classe` FROM `accounts` WHERE `username` = ?"));
     query->bindValue(0, UserName);
 
     if(!query->exec())
     {
         emit debug(tr("Erreur lors de l'execution d'un requête de récupèration d'informations sur la classe (Supervisor) : %1").arg(query->lastError().text()));
+        lock.unlock();
         return false;
     }
     else
@@ -75,12 +84,13 @@ QString SQLServerSupervisor::FindClasse(const QString &UserName)
         query->first();
         QString classe = query->value(0).toString();
 
+        lock.unlock();
         return classe;
     }
 }
 QList<Devoir> SQLServerSupervisor::LoadHomeworks(const QString &Classe, const QString &Matiere)
 {
-    QMutexLocker m(&mutex);
+    lock.lockForRead();
     QList<Devoir> devoirs;
 
     bool all = false;
@@ -111,11 +121,13 @@ QList<Devoir> SQLServerSupervisor::LoadHomeworks(const QString &Classe, const QS
         devoirs.append(devoir);
     }
 
+    lock.unlock();
+
     return devoirs;
 }
 bool SQLServerSupervisor::CreateAccount(const QString &UserName, const QString &Password, const QString &classe)
 {
-    QMutexLocker m(&mutex);
+    lock.lockForWrite();
     QByteArray password = Hash(Password).toHex();
 
     query->prepare(tr("INSERT INTO `accounts` VALUES(DEFAULT, ?, ?, ?);"));
@@ -126,14 +138,18 @@ bool SQLServerSupervisor::CreateAccount(const QString &UserName, const QString &
     if(!query->exec())
     {
         emit debug(tr("Erreur lors de la création d'un compte(Supervisor)!"));
+        lock.unlock();
         return false;
     }
     else
+    {
+        lock.unlock();
         return true;
+    }
 }
 bool SQLServerSupervisor::AddHomework(const QString &nom, const QString &sujet, const QString &matiere, const QString &classe, const QDate &date)
 {
-    QMutexLocker m(&mutex);
+    lock.lockForWrite();
 
     query->prepare("INSERT INTO `homework_table` VALUES(DEFAULT, ?, ?, ?, ?, ?);");
 
@@ -146,14 +162,18 @@ bool SQLServerSupervisor::AddHomework(const QString &nom, const QString &sujet, 
     if(!query->exec())
     {
         emit debug(tr("Erreur lors de l'ajout d'un devoir."));
+        lock.unlock();
         return false;
     }
     else
+    {
+        lock.unlock();
         return true;
+    }
 }
 bool SQLServerSupervisor::RemoveHomework(const QString &nom)
 {
-    QMutexLocker m(&mutex);
+    lock.lockForWrite();
 
     query->prepare("DELETE FROM `homework_table` WHERE `Nom` = ?;");
     query->bindValue(0, nom);
@@ -161,14 +181,18 @@ bool SQLServerSupervisor::RemoveHomework(const QString &nom)
     if(!query->exec())
     {
         emit debug(tr("Erreur lors de l'écrasement d'un devoir."));
+        lock.unlock();
         return false;
     }
     else
+    {
+        lock.unlock();
         return true;
+    }
 }
 QStringList SQLServerSupervisor::GetAllMatiereFromClasse(const QString &Classe)
 {
-    QMutexLocker m(&mutex);
+    lock.lockForRead();
 
     QStringList matieres;
 
@@ -186,11 +210,13 @@ QStringList SQLServerSupervisor::GetAllMatiereFromClasse(const QString &Classe)
         matieres << query->value(0).toString();
     }
 
+    lock.unlock();
+
     return matieres;
 }
 QStringList SQLServerSupervisor::GetAllMatiere()
 {
-    QMutexLocker m(&mutex);
+    lock.lockForRead();
 
     QStringList matieres;
 
@@ -207,13 +233,47 @@ QStringList SQLServerSupervisor::GetAllMatiere()
         matieres << query->value(0).toString();
     }
 
+    lock.unlock();
+
     return matieres;
+}
+bool SQLServerSupervisor::RemoveAccount(int ID)
+{
+    lock.lockForWrite();
+
+    query->prepare(tr("DELETE FROM `accounts` WHERE `ID` = ?"));
+    query->bindValue(0, QVariant(ID));
+
+    if(!query->exec())
+    {
+        emit debug(tr("Erreur lors de la supression d'un compte par ID."));
+        return false;
+    }
+
+
+    lock.unlock();
+    return true;
+}
+bool SQLServerSupervisor::RemoveHomework(int ID)
+{
+    lock.lockForWrite();
+
+    query->prepare(tr("DELETE FROM `homework_table` WHERE `ID` = ?"));
+    query->bindValue(0, QVariant(ID));
+
+    if(!query->exec())
+    {
+        emit debug(tr("Erreur lors de la supression d'un devoir par ID."));
+        return false;
+    }
+
+
+    lock.unlock();
+    return true;
 }
 
 bool SQLServerSupervisor::Kill()
 {
-    QMutexLocker locker(&mutex);
-
     if(_instance != NULL)
         delete _instance;
 
@@ -223,11 +283,12 @@ SQLServerSupervisor* SQLServerSupervisor::GetInstance()
 {
     if(_instance == NULL)
     {
-        QMutexLocker locker(&mutex);
+        _StaticMutex->lock();
         if(_instance == NULL)
         {
             _instance = new SQLServerSupervisor;
             emit _instance->debug(tr("SQL Server Supervisor chargé!!!"));
+            _StaticMutex->unlock();
             return _instance;
         }
     }

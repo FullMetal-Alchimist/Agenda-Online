@@ -19,6 +19,12 @@
 class SQLServerSupervisor : public QObject
 {
     Q_OBJECT
+    enum TypeString
+    {
+        IP,
+        Account
+    };
+
 public:
 
     QByteArray Hash(QString const& toHash);
@@ -29,9 +35,21 @@ public:
     QStringList GetAllMatiere();
 
     bool CreateAccount(QString const& UserName, QString const& Password, QString const& classe);
+    bool RemoveAccount(QString const& Nom);
+    bool RemoveAccount(int ID);
     bool AddHomework(QString const& nom, QString const& sujet, QString const& matiere, QString const& classe, QDate const& date);
     bool RemoveHomework(QString const& nom);
+    bool RemoveHomework(int ID);
     //bool UpdateHomework(QString const& nom, QString const& sujet, QString const& matiere, QString const& classe);
+
+
+    bool AddBan(int BanType, int BanMethod, QString Reason, int Time = 1, QString IP = "", QString Account = "");
+
+    bool RemoveBan(int ID);
+    bool RemoveBan(QString String, TypeString t);
+
+    bool GetLastIP(QString const& Nom, QString& IP);
+    bool IsConnected(QString const& Nom, bool& Connected);
 
     static SQLServerSupervisor* GetInstance();
     static bool Kill();
@@ -49,9 +67,10 @@ protected:
     QSqlDatabase db;
     QSqlQuery* query;
 
-    static mutable QMutex mutex;
+    QReadWriteLock lock;
 
     static SQLServerSupervisor* _instance;
+    static QMutex* _StaticMutex;
 };
 
 #endif // SQLSERVERSUPERVISOR_HPP
