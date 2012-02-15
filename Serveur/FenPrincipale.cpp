@@ -9,7 +9,7 @@ FenPrincipale::FenPrincipale(QWidget *parent) :
 
     if(serveur->listen(QHostAddress::Any, 50885))
     {
-        PutMessage(tr("Le serveur est mis en place ! Les clients peuvent se connecté!"));
+        PutMessage(tr("Le serveur est mis en place ! Les clients peuvent se connecter!"));
     }
     else
         PutMessage(tr("Erreur fatal! Le serveur n'a pas été mis en place, les clients ne peuvent pas se connecter....\n%1").arg(serveur->errorString()));
