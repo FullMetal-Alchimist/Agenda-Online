@@ -106,9 +106,6 @@ bool ChatServer::CreateInstance()
 }
 ChatServer* ChatServer::GetInstance()
 {
-    if(_instance == NULL)
-        CreateInstance();
-
     return _instance;
 }
 bool ChatServer::KillInstance()

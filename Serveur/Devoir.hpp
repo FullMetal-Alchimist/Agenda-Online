@@ -75,10 +75,11 @@ private:
     QString name;
     QString matiere;
     QString sujet;
-    QDate date;
-
-    quint64 id;
     QString classe;
+
+    QDate date;
+    quint64 id;
+
 };
 
 Q_DECLARE_METATYPE(Devoir)

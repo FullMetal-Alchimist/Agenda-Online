@@ -43,7 +43,7 @@ public:
         SMSG_COMMAND_REPONSE = 0x15,
         SMSG_COMMAND_REFUSED = 0x16,
 
-        TOTAL_OP
+        COUNT = SMSG_COMMAND_REFUSED + 1
     };
     typedef quint8 Header;
 
@@ -64,9 +64,7 @@ signals:
     void chatMessage(QString const& message, QString const& from);
     void newListMatieres(QStringList const& matieres);
 public:
-    bool IsAuthentified() const
-    { return Authentified;
-    }
+    bool IsAuthentified() const { return Authentified; }
 public slots:
     void connectTo(const QString& ip, const quint16& port);
     void processCode(quint8 code);

@@ -1,5 +1,6 @@
 #ifndef FENPRINCIPALE_HPP
 #define FENPRINCIPALE_HPP
+
 #include <QtGui>
 #include "Server.hpp"
 #include "ui_FenPrincipale.h"

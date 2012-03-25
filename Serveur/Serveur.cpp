@@ -3,7 +3,7 @@
 QMap<QString, Serveur* > Serveur::m_Clients = QMap<QString, Serveur* >();
 
 Serveur::Serveur(int handle, QObject *parent) :
-    QThread(parent), myHandle(handle), taillePacket(0), UserName(tr("Un client non authentifié")), threadRunning(true), errorFatal(false)
+    QThread(parent), myHandle(handle), taillePacket(0), UserName(tr("NULLCLIENT")), threadRunning(true), errorFatal(false)
 {
 }
 Serveur::~Serveur()
@@ -58,7 +58,7 @@ void Serveur::processData()
     in >> header;
 
     emit message(tr("Données reçues pour Header(%1) et pour taille(%2)").arg(QString::number(header), QString::number(taillePacket)));
-
+    bool Authentified = UserName != "NULLCLIENT";
     switch(header)
     {
         case CMSG_MESSAGE_LEGER:
@@ -81,7 +81,7 @@ void Serveur::processData()
         }
         case CMSG_PING:
         {
-            if(!UserName.startsWith("Un client"))
+            if(Authentified)
                 emit message(tr("Ping reçu de %1.").arg(UserName));
             else
                 emit message(tr("Ping reçu d'un client non authentifié."));
@@ -91,7 +91,7 @@ void Serveur::processData()
         }
         case CMSG_PONG:
         {
-            if(!UserName.startsWith("Un client"))
+            if(Authentified)
                 emit message(tr("Pong! Reçu de %1").arg(UserName));
             else
                 emit message(tr("Pong! Reçu d'un client non authentifié."));
@@ -125,7 +125,7 @@ void Serveur::processData()
         }
         case CMSG_MESSAGE_HOMEWORKFOR:
         {
-            if(UserName.startsWith("Un client"))
+            if(Authentified)
             {
                 reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
                 emit message(tr("Demande de devoir de la part d'un client non authentifié !! (Refusé)"));
@@ -146,7 +146,7 @@ void Serveur::processData()
         }
         case CMSG_MESSAGE_CHAT:
         {
-            if(UserName.startsWith("Un client"))
+            if(Authentified)
             {
                 reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
                 emit message(tr("Message envoyé d'un client inconnu."));
@@ -171,9 +171,16 @@ void Serveur::processData()
         }
         case CMSG_MESSAGE_LISTMATIERE:
         {
-            QStringList listMatiere = SQLServerSupervisor::GetInstance()->GetAllMatiereFromClasse(Classe);
-            emit message(tr("Demande des matières disponibles pour la classe %1 de %2").arg(Classe, UserName));
-            SendMatieres(listMatiere);
+            if(Authentified)
+            {
+                QStringList listMatiere = SQLServerSupervisor::GetInstance()->GetAllMatiereFromClasse(Classe);
+                emit message(tr("Demande des matières disponibles pour la classe %1 de %2").arg(Classe, UserName));
+                SendMatieres(listMatiere);
+            }
+            else
+            {
+                emit message(tr("Demande des matières disponibles d'un utilisateur inconnu."));
+            }
 
             break;
         }

@@ -39,7 +39,7 @@ public:
         SMSG_COMMAND_REPONSE = 0x15,
         SMSG_COMMAND_REFUSED = 0x16,
 
-        TOTAL_OP
+        COUNT = SMSG_COMMAND_REFUSED + 1
     };
     typedef quint8 Header;
 
@@ -100,6 +100,7 @@ private:
 private:
     QString UserName;
     QString Classe;
+    int ID;
 
     /** Low-level thread vars **/
 private:

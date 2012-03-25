@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_SYMBIAN
     w.showMinimized();
 #else
-    w.showNormal();
+    w.show();
 #endif
 
     return a.exec();
