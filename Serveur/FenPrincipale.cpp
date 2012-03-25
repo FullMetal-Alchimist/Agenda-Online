@@ -4,20 +4,28 @@ FenPrincipale::FenPrincipale(QWidget *parent) :
     QWidget(parent)
 {
     setupUi(this);
-    serveur = new Server(this);
+    manager = new ServerManager(this);
+
+    ChatServeur* baseChat = new ChatServeur;
+    MainServeur* baseMain = new MainServeur;
+
+    manager->AddServeur(baseChat);
+    manager->AddServeur(baseMain);
+
     DebugConsole->setReadOnly(true);
 
-    if(serveur->listen(QHostAddress::Any, 50885))
+    if(manager->Listen(baseChat, QHostAddress::Any, 50890) && manager->Listen(baseMain, QHostAddress::Any, 50885))
     {
         PutMessage(tr("Le serveur est mis en place ! Les clients peuvent se connecter!"));
     }
     else
         PutMessage(tr("Erreur fatal! Le serveur n'a pas été mis en place, les clients ne peuvent pas se connecter....\n%1").arg(serveur->errorString()));
 
-    connect(serveur, SIGNAL(message(QString)), this, SLOT(PutMessage(QString)));
-    connect(serveur, SIGNAL(newClient(QString,QString)), this, SLOT(AddClient(QString,QString)));
-    connect(serveur, SIGNAL(removeClient(QString,QString)), this, SLOT(RemoveClient(QString,QString)));
+    connect(manager, SIGNAL(message(QString)), this, SLOT(PutMessage(QString)));
+    connect(manager, SIGNAL(newClient(QString,QString)), this, SLOT(AddClient(QString,QString)));
+    connect(manager, SIGNAL(removeClient(QString,QString)), this, SLOT(RemoveClient(QString,QString)));
     connect(SQLServerSupervisor::GetInstance(), SIGNAL(debug(QString)), this, SLOT(PutMessage(QString)));
+
 
     initModel();
 }

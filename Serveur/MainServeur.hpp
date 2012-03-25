@@ -3,48 +3,22 @@
 
 #include <QtNetwork>
 
-#include "SQLServerSupervisor.hpp"
+#include "AuthentificationSystem.hpp"
+#include "AbstractServeur.hpp"
 
-class Serveur : public QThread
+class MainServeur : public AbstractServeur
 {
     Q_OBJECT
 public:
-    enum Header
+    MainServeur(QObject *parent = 0);
+    MainServeur(MainServeur const& lhs)
     {
-        CMSG_MESSAGE_LEGER = 0x1,
-        CMSG_PING = 0x2,
-        CMSG_PONG = 0x3,
-        CMSG_MESSAGE_CUSTOM = 0x4,
 
-        SMSG_PONG = 0x5,
-        SMSG_PING = 0x6,
-        SMSG_KICK = 0x7,
+    }
 
-        /** Custom Messages Clients **/
-        CMSG_MESSAGE_AUTH = 0x8,
-        CMSG_MESSAGE_HOMEWORKFOR = 0x9,
-        CMSG_MESSAGE_CHAT = 0xA,
-        CMSG_MESSAGE_LISTMATIERE = 0xB,
-        CMSG_MESSAGE_PRIVATE_MESSAGE = 0xC,
-        CMSG_MESSAGE_SHOW_ME_CONNECTED = 0xD,
-        CMSG_COMMAND_ADMIN = 0xE,
+    virtual ~MainServeur();
 
-        SMSG_AUTHENTIFICATION_SUCCESS = 0xF,
-        SMSG_AUTHENTIFICATION_FAILED = 0x10,
-        SMSG_HOMEWORK = 0x11,
-        SMSG_YOU_ARE_NOT_AUTHENTIFIED = 0x12,
-        SMSG_MESSAGE_CHAT = 0x13,
-        SMSG_LISTMATIERE = 0x14,
-        SMSG_COMMAND_REPONSE = 0x15,
-        SMSG_COMMAND_REFUSED = 0x16,
-
-        COUNT = SMSG_COMMAND_REFUSED + 1
-    };
-    typedef quint8 Header;
-
-    Serveur(int handle, QObject *parent = 0);
-    ~Serveur();
-
+    virtual MainServeur* Clone();
 signals:
     /** Thread Signal **/
     void message(QString const& message);
@@ -69,13 +43,7 @@ public slots:
 
     void SendPing();
     void Kick(QString Reason);
-
-    void SendPrivateMessage(QString const& Message, QString const& DestUser, QString const& DestClasse);
-    void AddMessage(QString const& From, QString const& Message);
-    void WriteAllMessagesFromQueue();
 public:
-    static void SendMessageAt(QString const& nom, QString const& message, QString const& classe);
-    static void SendSystemMessage(QString const& message);
     static bool Kick(QString UserName, QString Reason)
     {
         if(m_Clients.contains(UserName))
@@ -102,9 +70,7 @@ private:
 
     /** High-level network vars **/
 private:
-    QString UserName;
-    QString Classe;
-    int ID;
+    AuthentificationSystem* m_Authentification;
     QQueue<QByteArray> m_MessagesQueue;
 
     /** Low-level thread vars **/
@@ -117,8 +83,6 @@ private:
     mutable QMutex mutex;
 
 protected:
-    static QMap<QString, Serveur* > m_Clients;
-    static QSettings s_Settings;
 
 };
 

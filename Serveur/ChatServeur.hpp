@@ -1,15 +1,20 @@
 #ifndef CHATSERVEUR_H
 #define CHATSERVEUR_H
 
+#include "AbstractServeur.hpp"
+
 class ChatServeur : public AbstractServeur
 {
-    Q_OBJECT
-public:
-    explicit ChatServeur(QObject *parent = 0);
+        Q_OBJECT
+    public:
+        explicit ChatServeur(QObject *parent = 0);
 
-signals:
+        virtual ChatServeur* Clone() const;
+        void SendMessageAt(QString const& nom, )
+    signals:
 
-public slots:
+    public slots:
+        virtual void run();
 
 };
 
