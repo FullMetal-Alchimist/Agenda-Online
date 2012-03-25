@@ -6,6 +6,7 @@
 **************************************************************************/
 
 #include "SQLServerSupervisor.hpp"
+#include "AuthentificationSystem.hpp"
 
 SQLServerSupervisor* SQLServerSupervisor::_instance = NULL;
 QMutex* SQLServerSupervisor::_StaticMutex = new QMutex;
@@ -42,7 +43,7 @@ QByteArray SQLServerSupervisor::Hash(const QString &toHash)
 {
     return QCryptographicHash::hash(QCryptographicHash::hash(SEL_BEFORE, QCryptographicHash::Md5) + toHash.toLatin1() + QCryptographicHash::hash(SEL_AFTER, QCryptographicHash::Md5), QCryptographicHash::Sha1);
 }
-bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArray &Password)
+bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArray &Password) const
 {
     lock.lockForRead();
 
@@ -65,10 +66,14 @@ bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArr
         return PasswordHashed == Password.toHex();
     }
 }
-QString SQLServerSupervisor::FindClasse(const QString &UserName)
+bool SQLServerSupervisor::Authentificate(AuthentificationSystem *pSystem) const
+{
+    return Authentificate(pSystem->GetUserName(), pSystem->GetPassword());
+}
+QString SQLServerSupervisor::FindClasse(const QString &UserName) const
 {
     lock.lockForRead();
-    query->prepare(tr("SELECT `classe` FROM `accounts` WHERE `UserName` = ?"));
+    query->prepare(tr("SELECT `Classe` FROM `accounts` WHERE `UserName` = ?"));
     query->bindValue(0, UserName);
 
     if(!query->exec())
@@ -84,6 +89,27 @@ QString SQLServerSupervisor::FindClasse(const QString &UserName)
 
         lock.unlock();
         return classe;
+    }
+}
+int SQLServerSupervisor::FindID(const QString &UserName) const
+{
+    lock.lockForRead();
+    query->prepare(tr("SELECT `ID` FROM `accounts` WHERE `UserName` = ?"));
+    query->bindValue(0, UserName);
+
+    if(!query->exec())
+    {
+        emit debug(tr("Erreur lors de l'execution d'un requête de récupèration d'informations sur l'id (Supervisor) : %1").arg(query->lastError().text()));
+        lock.unlock();
+        return false;
+    }
+    else
+    {
+        query->first();
+        int id = query->value(0).toInt();
+
+        lock.unlock();
+        return id;
     }
 }
 QList<Devoir> SQLServerSupervisor::LoadHomeworks(const QString &Classe, const QString &Matiere)
@@ -123,6 +149,11 @@ QList<Devoir> SQLServerSupervisor::LoadHomeworks(const QString &Classe, const QS
 
     return devoirs;
 }
+QList<Devoir> SQLServerSupervisor::LoadHomeworks(AuthentificationSystem *pSystem, const QString &Matiere)
+{
+    return LoadHomeworks(pSystem->GetClasse(), Matiere);
+}
+
 bool SQLServerSupervisor::CreateAccount(const QString &UserName, const QString &Password, const QString &classe)
 {
     lock.lockForWrite();
@@ -212,6 +243,11 @@ QStringList SQLServerSupervisor::GetAllMatiereFromClasse(const QString &Classe)
 
     return matieres;
 }
+QStringList SQLServerSupervisor::GetAllMatiereFromClasse(AuthentificationSystem *pSystem)
+{
+    return GetAllMatiereFromClasse(pSystem->GetClasse());
+}
+
 QStringList SQLServerSupervisor::GetAllMatiere()
 {
     lock.lockForRead();

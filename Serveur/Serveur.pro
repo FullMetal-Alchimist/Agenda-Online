@@ -5,21 +5,43 @@ TEMPLATE = app
 
 HEADERS += \
     SQLServerSupervisor.hpp \
-    Serveur.hpp \
     Server.hpp \
     FenPrincipale.hpp \
-    Devoir.hpp
+    Devoir.hpp \
+    AbstractServeur.hpp \
+    MainServeur.hpp \
+    ChatServeur.hpp \
+    AuthentificationSystem.hpp
 
 SOURCES += \
     SQLServerSupervisor.cpp \
-    Serveur.cpp \
     Server.cpp \
     main.cpp \
     FenPrincipale.cpp \
-    Devoir.cpp
+    Devoir.cpp \
+    AbstractServeur.cpp \
+    MainServeur.cpp \
+    ChatServeur.cpp \
+    AuthentificationSystem.cpp
 
 FORMS += \
     FenPrincipale.ui
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

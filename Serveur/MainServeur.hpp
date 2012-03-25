@@ -71,8 +71,8 @@ public slots:
     void Kick(QString Reason);
 
     void SendPrivateMessage(QString const& Message, QString const& DestUser, QString const& DestClasse);
-    void WriteMessage(QString const& From, QString const& Message);
-
+    void AddMessage(QString const& From, QString const& Message);
+    void WriteAllMessagesFromQueue();
 public:
     static void SendMessageAt(QString const& nom, QString const& message, QString const& classe);
     static void SendSystemMessage(QString const& message);
@@ -105,6 +105,7 @@ private:
     QString UserName;
     QString Classe;
     int ID;
+    QQueue<QByteArray> m_MessagesQueue;
 
     /** Low-level thread vars **/
 private:

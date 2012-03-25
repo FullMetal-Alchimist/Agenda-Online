@@ -54,6 +54,7 @@ void FenDevoir::SetHeaderData()
 
     devoirs->resizeColumnsToContents();
     devoirs->resizeRowsToContents();
+    devoirs->verticalHeader()->hide();
 }
 
 void FenDevoir::addHomework(const Devoir &devoir)

@@ -39,6 +39,7 @@ void Serveur::run()
                 emit removeClient(UserName, Classe);
             break;
         }
+        WriteAllMessagesFromQueue();
     }
 }
 
@@ -109,11 +110,10 @@ void Serveur::processData()
 
             if(SQLServerSupervisor::GetInstance()->Authentificate(userName, password))
             {
-                if(m_Clients.contains(UserName))
+                if(m_Clients.contains(userName))
                 {
-                    Serveur* anotherInstanceOfMe = m_Clients[UserName];
                     if(s_Settings.value("KickIfConnected", 0).toInt())
-                        anotherInstanceOfMe->Kick("You are already connected.");
+                        Serveur::Kick(userName, "Another you wants to connect so, in the configuration, i must kick you :P\n bye, bye !.");
                     else
                     {
                         Kick("You are already connected.");
@@ -283,8 +283,13 @@ void Serveur::Kick(QString Reason)
     /** By Ryan Lahfa
         Bye bye my friend of network
     **/
-
-    myClient->disconnectFromHost();
+    yieldCurrentThread();
+    sleep(1);
+    if(myClient->state() != QAbstractSocket::UnconnectedState)
+    {
+        myClient->waitForBytesWritten();
+        myClient->disconnectFromHost();
+    }
 }
 void Serveur::SendMessageAt(const QString &nom, const QString &message, const QString &classe)
 {
@@ -296,10 +301,10 @@ void Serveur::SendMessageAt(const QString &nom, const QString &message, const QS
         if(classeOfClient != classe && classe != tr("All"))
             continue;
 
-        it.value()->WriteMessage(nom, message);
+        it.value()->AddMessage(nom, message);
     }
 }
-void Serveur::WriteMessage(const QString &From, const QString &Message)
+void Serveur::AddMessage(const QString &From, const QString &Message)
 {
     QByteArray paquet;
     QDataStream out(&paquet, QIODevice::WriteOnly);
@@ -311,7 +316,7 @@ void Serveur::WriteMessage(const QString &From, const QString &Message)
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    ThreadSafe_Write(paquet);
+    m_MessagesQueue.enqueue(paquet);
 }
 void Serveur::SendPrivateMessage(const QString& Message, const QString &DestUser, const QString &DestClasse)
 {
@@ -319,11 +324,16 @@ void Serveur::SendPrivateMessage(const QString& Message, const QString &DestUser
     {
         if(m_Clients[DestUser]->Classe == DestClasse)
         {
-            m_Clients[DestUser]->WriteMessage(UserName, Message);
+            m_Clients[DestUser]->AddMessage(UserName, Message);
         }
     }
 }
 void Serveur::SendSystemMessage(const QString &message)
 {
     SendMessageAt(tr("System"), message, tr("All"));
+}
+void Serveur::WriteAllMessagesFromQueue()
+{
+    while(!m_MessagesQueue.empty())
+        ThreadSafe_Write(m_MessagesQueue.dequeue());
 }

@@ -89,7 +89,6 @@ void FenPrincipale::initModel()
     model = new QStandardItemModel(this);
 
     SetHeaderData();
-
     clients->setModel(model);
 }
 void FenPrincipale::SetHeaderData()
@@ -99,6 +98,7 @@ void FenPrincipale::SetHeaderData()
 
     clients->resizeColumnsToContents();
     clients->resizeRowsToContents();
+    clients->verticalHeader()->hide();
 }
 
 void FenPrincipale::AddClient(const QString &nom, const QString &classe)

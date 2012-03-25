@@ -120,7 +120,7 @@ void Client::receiveData()
         in >> reason;
 
         socket->disconnectFromHost();
-        emit message("Kicked from Server");
+        emit message(tr("Kicked from Server: %1").arg(reason));
     }
     else
         processCode(code);
