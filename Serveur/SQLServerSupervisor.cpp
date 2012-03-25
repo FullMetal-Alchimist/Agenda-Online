@@ -28,8 +28,6 @@ SQLServerSupervisor::~SQLServerSupervisor()
 
 bool SQLServerSupervisor::OpenDB()
 {
-    lock.lockForWrite();
-
     db.setDatabaseName(tr("homework"));
     db.setHostName(tr("127.0.0.1"));
     db.setPassword(tr("748700"));
