@@ -31,7 +31,7 @@ bool SQLServerSupervisor::OpenDB()
     db.setDatabaseName(tr("homework"));
     db.setHostName(tr("127.0.0.1"));
     db.setPassword(tr("748700"));
-    db.setUserName(tr("root"));
+    db.setUserName(tr("Setsuna"));
     db.setPort(3306);
 
 
@@ -46,7 +46,7 @@ bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArr
 {
     lock.lockForRead();
 
-    query->prepare(tr("SELECT `passwordhashed` FROM `accounts` WHERE `username` = ? LIMIT 1;"));
+    query->prepare(tr("SELECT `Password` FROM `accounts` WHERE `UserName` = ? LIMIT 1;"));
     query->bindValue(0, UserName);
 
     if(!query->exec())
@@ -68,7 +68,7 @@ bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArr
 QString SQLServerSupervisor::FindClasse(const QString &UserName)
 {
     lock.lockForRead();
-    query->prepare(tr("SELECT `classe` FROM `accounts` WHERE `username` = ?"));
+    query->prepare(tr("SELECT `classe` FROM `accounts` WHERE `UserName` = ?"));
     query->bindValue(0, UserName);
 
     if(!query->exec())
@@ -152,8 +152,8 @@ bool SQLServerSupervisor::AddHomework(const QString &nom, const QString &sujet, 
     query->prepare("INSERT INTO `homework_table` VALUES(DEFAULT, ?, ?, ?, ?, ?);");
 
     query->bindValue(0, nom);
-    query->bindValue(1, matiere);
-    query->bindValue(2, sujet);
+    query->bindValue(1, sujet);
+    query->bindValue(2, matiere);
     query->bindValue(3, classe);
     query->bindValue(4, date);
 

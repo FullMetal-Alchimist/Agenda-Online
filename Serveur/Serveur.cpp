@@ -1,6 +1,7 @@
 #include "Serveur.hpp"
 
 QMap<QString, Serveur* > Serveur::m_Clients = QMap<QString, Serveur* >();
+QSettings Serveur::s_Settings("SOS Danbou", "Agenda-Online Server");
 
 Serveur::Serveur(int handle, QObject *parent) :
     QThread(parent), myHandle(handle), taillePacket(0), UserName(tr("NULLCLIENT")), threadRunning(true), errorFatal(false)
@@ -8,6 +9,8 @@ Serveur::Serveur(int handle, QObject *parent) :
 }
 Serveur::~Serveur()
 {
+    if(m_Clients.contains(UserName))
+        m_Clients.remove(UserName);
     delete myClient;
 }
 
@@ -20,7 +23,6 @@ void Serveur::run()
         emit message(tr("Error : When setting Socket Descriptor : %1").arg(QString::number(myHandle)));
         return;
     }
-
     while((threadRunning) || (!errorFatal))
     {
         if(myClient->waitForReadyRead(5000))
@@ -33,7 +35,7 @@ void Serveur::run()
 
         if(myClient->state() == QTcpSocket::UnconnectedState)
         {
-            if(!UserName.startsWith("Un client"))
+            if(UserName != "NULLCLIENT")
                 emit removeClient(UserName, Classe);
             break;
         }
@@ -107,11 +109,24 @@ void Serveur::processData()
 
             if(SQLServerSupervisor::GetInstance()->Authentificate(userName, password))
             {
+                if(m_Clients.contains(UserName))
+                {
+                    Serveur* anotherInstanceOfMe = m_Clients[UserName];
+                    if(s_Settings.value("KickIfConnected", 0).toInt())
+                        anotherInstanceOfMe->Kick("You are already connected.");
+                    else
+                    {
+                        Kick("You are already connected.");
+                        break;
+                    }
+                }
                 UserName = userName;
                 Classe = SQLServerSupervisor::GetInstance()->FindClasse(userName);
 
                 emit message(tr("Tentative d'authentification de %1 réussi !").arg(userName));
                 emit newClient(userName, Classe);
+
+                m_Clients[UserName] = this;
 
                 reponse(SMSG_AUTHENTIFICATION_SUCCESS);
             }
@@ -125,7 +140,7 @@ void Serveur::processData()
         }
         case CMSG_MESSAGE_HOMEWORKFOR:
         {
-            if(Authentified)
+            if(!Authentified)
             {
                 reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
                 emit message(tr("Demande de devoir de la part d'un client non authentifié !! (Refusé)"));
@@ -146,7 +161,7 @@ void Serveur::processData()
         }
         case CMSG_MESSAGE_CHAT:
         {
-            if(Authentified)
+            if(!Authentified)
             {
                 reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
                 emit message(tr("Message envoyé d'un client inconnu."));
@@ -158,15 +173,7 @@ void Serveur::processData()
 
             emit message(tr("Message envoyé par Chat de la part de %1, contenu(%2)").arg(UserName, messageChat));
 
-            if(ChatServer::GetInstance()->HasClient(myClient))
-            {
-                ChatServer::GetInstance()->SendMessageAt(UserName, messageChat, Classe);
-            }
-            else
-            {
-                ChatServer::GetInstance()->AddClient(myClient, UserName, Classe);
-                ChatServer::GetInstance()->SendMessageAt(UserName, messageChat, Classe);
-            }
+            SendMessageAt(UserName, messageChat, Classe);
             break;
         }
         case CMSG_MESSAGE_LISTMATIERE:
@@ -278,4 +285,45 @@ void Serveur::Kick(QString Reason)
     **/
 
     myClient->disconnectFromHost();
+}
+void Serveur::SendMessageAt(const QString &nom, const QString &message, const QString &classe)
+{
+    for(QMapIterator<QString, Serveur* > it(m_Clients) ; it.hasNext() ;)
+    {
+        it.next();
+        QString classeOfClient = it.value()->Classe;
+
+        if(classeOfClient != classe && classe != tr("All"))
+            continue;
+
+        it.value()->WriteMessage(nom, message);
+    }
+}
+void Serveur::WriteMessage(const QString &From, const QString &Message)
+{
+    QByteArray paquet;
+    QDataStream out(&paquet, QIODevice::WriteOnly);
+
+    out << (quint16) 0;
+    out << (quint8) Serveur::SMSG_MESSAGE_CHAT;
+    out << From;
+    out << Message;
+    out.device()->seek(0);
+    out << (quint16) (paquet.size() - sizeof(quint16));
+
+    ThreadSafe_Write(paquet);
+}
+void Serveur::SendPrivateMessage(const QString& Message, const QString &DestUser, const QString &DestClasse)
+{
+    if(m_Clients.contains(DestUser))
+    {
+        if(m_Clients[DestUser]->Classe == DestClasse)
+        {
+            m_Clients[DestUser]->WriteMessage(UserName, Message);
+        }
+    }
+}
+void Serveur::SendSystemMessage(const QString &message)
+{
+    SendMessageAt(tr("System"), message, tr("All"));
 }

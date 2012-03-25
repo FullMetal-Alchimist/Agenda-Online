@@ -3,7 +3,6 @@
 
 #include <QtNetwork>
 
-#include "ChatServer.hpp"
 #include "SQLServerSupervisor.hpp"
 
 class Serveur : public QThread
@@ -71,7 +70,12 @@ public slots:
     void SendPing();
     void Kick(QString Reason);
 
+    void SendPrivateMessage(QString const& Message, QString const& DestUser, QString const& DestClasse);
+    void WriteMessage(QString const& From, QString const& Message);
+
 public:
+    static void SendMessageAt(QString const& nom, QString const& message, QString const& classe);
+    static void SendSystemMessage(QString const& message);
     static bool Kick(QString UserName, QString Reason)
     {
         if(m_Clients.contains(UserName))
@@ -113,6 +117,7 @@ private:
 
 protected:
     static QMap<QString, Serveur* > m_Clients;
+    static QSettings s_Settings;
 
 };
 

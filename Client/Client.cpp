@@ -252,6 +252,12 @@ void Client::Flush()
 }
 void Client::SendAvailableMatieresRequest()
 {
+    if(!IsAuthentified())
+    {
+        emit message(tr("Vous n'êtes pas authentifié(e) !"));
+        return;
+    }
+
     QByteArray paquet;
     QDataStream out(&paquet, QIODevice::WriteOnly);
 

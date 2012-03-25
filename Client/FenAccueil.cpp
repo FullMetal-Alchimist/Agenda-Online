@@ -1,5 +1,7 @@
 #include "FenAccueil.hpp"
 
+#define _DEBUG
+
 FenAccueil::FenAccueil(QWidget *parent) :
     QDialog(parent)
 {
