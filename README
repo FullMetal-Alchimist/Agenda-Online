@@ -1,0 +1,12 @@
+Agenda-Online est un projet destiné à pouvoir récuperer les devoirs depuis un serveur où les élèves d'une classe ou les professeurs d'une matière peuvent les mettre à disposition et éviter les oublis quand le professeur donne les devoirs au dernier moment (Hein ? Florian :D)
+
+Ce projet doit fournir :
+
+	- Un serveur de devoir (MainServeur)
+	- Un serveur de chat (ChatServeur)
+	- Une base de données contenant les comptes des élèves, professeurs, administrateurs, les devoirs et les différentes informations nécessaire au bon fonctionnement du programme
+	- Un système d'authentification efficace et robuste
+
+Et puis, c'est tout :)
+Pour pouvoir le faire fonctionner, lisez le HOWTO
+	
