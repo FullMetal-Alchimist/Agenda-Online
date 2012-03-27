@@ -1,0 +1,14 @@
+Pour pouvoir faire fonctionner le client,
+	- Compile-le avec Qt 4.7.2 en mode Release.
+	- Lancez-le
+En cas de bug, merci de les reporter depuis le module d'issue de GitHub ou de mailto:adelryan98@yahoo.fr
+
+Pour pouvoir faire fonctionner le serveur,
+	- Compile-le avec Qt 4.7.2 en mode Release
+	- Installer une base de donnée de type MySQL
+	- Créer une base de données pour nom homework
+	- Importer le fichier homework.sql
+	- Configurer le programme en fonction de votre configuration MySQL
+	- Have Fun.
+
+En cas de bug, merci des les reporter depuis le module d'issue de GitHub ou mailto:adelryan98@yahoo.fr
