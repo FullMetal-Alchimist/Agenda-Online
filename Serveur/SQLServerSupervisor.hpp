@@ -29,6 +29,10 @@ class SQLServerSupervisor : public QObject
 
 public:
 
+    bool BeginCustomQuery();
+    QSqlQuery* GetObjQuery();
+    bool EndCustomQuery();
+
     QByteArray Hash(QString const& toHash);
 
     bool Authentificate(QString const& UserName, QByteArray const& Password) const;

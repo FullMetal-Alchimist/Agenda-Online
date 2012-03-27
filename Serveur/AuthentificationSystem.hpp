@@ -23,7 +23,7 @@ class AuthentificationSystem : public QObject
             Unknown
         };
 
-        explicit AuthentificationSystem(QString const& UserName, QString const& Password, QObject *parent = 0);
+        AuthentificationSystem(QString const& UserName, QString const& Password, QObject *parent = 0);
 
         AuthentificationState State() const;
         AuthentificationError Error() const;
@@ -32,6 +32,10 @@ class AuthentificationSystem : public QObject
         QByteArray GetPassword() const;
         QString GetClasse() const;
         int GetID() const;
+
+        bool operator==(const AuthentificationSystem& lhs) const;
+        bool operator<(const AuthentificationSystem& lhs) const;
+        bool operator>(const AuthentificationSystem& lhs) const;
 
         static AuthentificationSystem* Authentificate(QString const& UserName, QString const& Password);
 
