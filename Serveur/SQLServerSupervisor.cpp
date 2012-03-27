@@ -12,9 +12,9 @@ SQLServerSupervisor* SQLServerSupervisor::_instance = NULL;
 QMutex* SQLServerSupervisor::_StaticMutex = new QMutex;
 
 SQLServerSupervisor::SQLServerSupervisor() :
-    QObject()
+    QObject(), lock(QMutex::Recursive)
 {
-    lock.lockForWrite();
+    lock.lock();
     db = QSqlDatabase::addDatabase(tr("QMYSQL"), tr("SQL Server Supervisor"));
     query = new QSqlQuery(db);
 
@@ -45,7 +45,7 @@ QByteArray SQLServerSupervisor::Hash(const QString &toHash)
 }
 bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArray &Password) const
 {
-    lock.lockForRead();
+    lock.lock();
 
     query->prepare(tr("SELECT `Password` FROM `accounts` WHERE `UserName` = ? LIMIT 1;"));
     query->bindValue(0, UserName);
@@ -72,7 +72,7 @@ bool SQLServerSupervisor::Authentificate(AuthentificationSystem *pSystem) const
 }
 QString SQLServerSupervisor::FindClasse(const QString &UserName) const
 {
-    lock.lockForRead();
+    lock.lock();
     query->prepare(tr("SELECT `Classe` FROM `accounts` WHERE `UserName` = ?"));
     query->bindValue(0, UserName);
 
@@ -93,7 +93,7 @@ QString SQLServerSupervisor::FindClasse(const QString &UserName) const
 }
 int SQLServerSupervisor::FindID(const QString &UserName) const
 {
-    lock.lockForRead();
+    lock.lock();
     query->prepare(tr("SELECT `ID` FROM `accounts` WHERE `UserName` = ?"));
     query->bindValue(0, UserName);
 
@@ -114,7 +114,7 @@ int SQLServerSupervisor::FindID(const QString &UserName) const
 }
 QList<Devoir> SQLServerSupervisor::LoadHomeworks(const QString &Classe, const QString &Matiere)
 {
-    lock.lockForRead();
+    lock.lock();
     QList<Devoir> devoirs;
 
     bool all = false;
@@ -156,7 +156,7 @@ QList<Devoir> SQLServerSupervisor::LoadHomeworks(AuthentificationSystem *pSystem
 
 bool SQLServerSupervisor::CreateAccount(const QString &UserName, const QString &Password, const QString &classe)
 {
-    lock.lockForWrite();
+    lock.lock();
     QByteArray password = Hash(Password).toHex();
 
     query->prepare(tr("INSERT INTO `accounts` VALUES(DEFAULT, ?, ?, ?);"));
@@ -178,7 +178,7 @@ bool SQLServerSupervisor::CreateAccount(const QString &UserName, const QString &
 }
 bool SQLServerSupervisor::AddHomework(const QString &nom, const QString &sujet, const QString &matiere, const QString &classe, const QDate &date)
 {
-    lock.lockForWrite();
+    lock.lock();
 
     query->prepare("INSERT INTO `homework_table` VALUES(DEFAULT, ?, ?, ?, ?, ?);");
 
@@ -202,7 +202,7 @@ bool SQLServerSupervisor::AddHomework(const QString &nom, const QString &sujet, 
 }
 bool SQLServerSupervisor::RemoveHomework(const QString &nom)
 {
-    lock.lockForWrite();
+    lock.lock();
 
     query->prepare("DELETE FROM `homework_table` WHERE `Nom` = ?;");
     query->bindValue(0, nom);
@@ -221,7 +221,7 @@ bool SQLServerSupervisor::RemoveHomework(const QString &nom)
 }
 QStringList SQLServerSupervisor::GetAllMatiereFromClasse(const QString &Classe)
 {
-    lock.lockForRead();
+    lock.lock();
 
     QStringList matieres;
 
@@ -250,7 +250,7 @@ QStringList SQLServerSupervisor::GetAllMatiereFromClasse(AuthentificationSystem 
 
 QStringList SQLServerSupervisor::GetAllMatiere()
 {
-    lock.lockForRead();
+    lock.lock();
 
     QStringList matieres;
 
@@ -273,7 +273,7 @@ QStringList SQLServerSupervisor::GetAllMatiere()
 }
 bool SQLServerSupervisor::RemoveAccount(int ID)
 {
-    lock.lockForWrite();
+    lock.lock();
 
     query->prepare(tr("DELETE FROM `accounts` WHERE `ID` = ?"));
     query->bindValue(0, QVariant(ID));
@@ -290,7 +290,7 @@ bool SQLServerSupervisor::RemoveAccount(int ID)
 }
 bool SQLServerSupervisor::RemoveHomework(int ID)
 {
-    lock.lockForWrite();
+    lock.lock();
 
     query->prepare(tr("DELETE FROM `homework_table` WHERE `ID` = ?"));
     query->bindValue(0, QVariant(ID));
@@ -304,6 +304,21 @@ bool SQLServerSupervisor::RemoveHomework(int ID)
 
     lock.unlock();
     return true;
+}
+
+bool SQLServerSupervisor::BeginCustomQuery()
+{
+    return lock.tryLock();
+}
+
+QSqlQuery* SQLServerSupervisor::GetObjQuery()
+{
+    return query;
+}
+
+bool SQLServerSupervisor::EndCustomQuery()
+{
+    return lock.unlock();
 }
 
 bool SQLServerSupervisor::Kill()

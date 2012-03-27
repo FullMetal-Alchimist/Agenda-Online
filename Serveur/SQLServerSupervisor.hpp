@@ -72,7 +72,7 @@ protected:
     QSqlDatabase db;
     QSqlQuery* query;
 
-    QReadWriteLock lock;
+    mutable QMutex lock;
 
     static SQLServerSupervisor* _instance;
     static QMutex* _StaticMutex;
