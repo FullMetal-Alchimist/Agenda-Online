@@ -287,6 +287,24 @@ bool SQLServerSupervisor::RemoveAccount(int ID)
     lock.unlock();
     return true;
 }
+bool SQLServerSupervisor::RemoveAccount(const QString &Nom)
+{
+    lock.lock();
+
+    query->prepare(tr("DELETE FROM `accounts` WHERE `UserName` = ?"));
+    query->bindValue(0, Nom);
+
+    if(!query->exec())
+    {
+        emit debug(tr("Erreur lors de la supression d'un compte par nom."));
+        return false;
+    }
+
+
+    lock.unlock();
+    return true;
+}
+
 bool SQLServerSupervisor::RemoveHomework(int ID)
 {
     lock.lock();

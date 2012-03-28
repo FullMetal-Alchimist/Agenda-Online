@@ -12,6 +12,7 @@
 #include "ChatServeur.hpp"
 #include "SQLServerSupervisor.hpp"
 #include "FenAddDevoir.hpp"
+#include "FenAccount.hpp"
 
 
 class FenPrincipale : public QWidget, private Ui::FenPrincipale
@@ -28,11 +29,16 @@ class FenPrincipale : public QWidget, private Ui::FenPrincipale
         void RemoveClient(QString const& nom, QString const& classe);
 
     private slots:
-        void on_addAccount_clicked();
+        void on_gestionAccount_clicked();
         void on_addHomework_clicked();
         void on_removeHomework_clicked();
 
         void AddDevoir(QString const&, QString const&, QString const&, QString const&, QDate const&);
+        void AddAccount(QString const&, QString const&, QString const&);
+        void RemoveAccount(QString const&);
+        void RemoveAccount(int id);
+        void SearchInformation(QString const&);
+        void SearchInformation(int id);
 
     private:
         void initModel();
@@ -42,6 +48,7 @@ class FenPrincipale : public QWidget, private Ui::FenPrincipale
         QMap<QPair<QString, QString>, QStandardItem* > clientsMapped;
         QStandardItemModel* model;
         FenAddDevoir* addDevoirFen;
+        FenAccount* accountFen;
 };
 
 #endif // FENPRINCIPALE_HPP

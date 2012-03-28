@@ -5,10 +5,10 @@
 
 class FenAddDevoir : public QDialog, private Ui::FenAddDevoir
 {
-    Q_OBJECT
+        Q_OBJECT
 
-public:
-    explicit FenAddDevoir(QWidget *parent = 0);
+    public:
+        explicit FenAddDevoir(QWidget *parent = 0);
 
     signals:
         void AddDevoir(QString const& nom, QString const& sujet, QString const& matiere, QString const& classe, QDate const& date);

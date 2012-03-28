@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -35,9 +35,9 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QCommandLinkButton" name="addAccount">
+        <widget class="QCommandLinkButton" name="gestionAccount">
          <property name="text">
-          <string>Ajouter un compte</string>
+          <string>Gèrer les comptes</string>
          </property>
         </widget>
        </item>

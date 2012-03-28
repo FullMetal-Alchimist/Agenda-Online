@@ -5,7 +5,9 @@ FenPrincipale::FenPrincipale(QWidget *parent) :
 {
     setupUi(this);
     manager = new ServerManager(this);
+
     addDevoirFen = new FenAddDevoir(this);
+    accountFen = new FenAccount(this);
 
     ChatServeur* baseChat = new ChatServeur;
     MainServeur* baseMain = new MainServeur;
@@ -29,7 +31,12 @@ FenPrincipale::FenPrincipale(QWidget *parent) :
 
     connect(SQLServerSupervisor::GetInstance(), SIGNAL(debug(QString)), this, SLOT(PutMessage(QString)));
     connect(addDevoirFen, SIGNAL(AddDevoir(QString,QString,QString,QString,QDate)), this, SLOT(AddDevoir(QString,QString,QString,QString,QDate)));
-
+    connect(accountFen, SIGNAL(AddAccount(QString,QString,QString)), this, SLOT(AddAccount(QString,QString,QString)));
+    connect(accountFen, SIGNAL(DeleteAccount(int)), this, SLOT(RemoveAccount(int)));
+    connect(accountFen, SIGNAL(DeleteAccount(QString)), this, SLOT(RemoveAccount(QString)));
+    connect(accountFen, SIGNAL(NeedInformationFromAccountName(QString)), this, SLOT(SearchInformation(QString)));
+    connect(accountFen, SIGNAL(NeedInformationFromID(int)), this, SLOT(SearchInformation(int)));
+    connect(addDevoirFen, SIGNAL(Canceled()), this, SLOT(hide()));
     initModel();
 }
 FenPrincipale::~FenPrincipale()
@@ -42,21 +49,9 @@ void FenPrincipale::PutMessage(QString const& message)
     qApp->alert(this);
     DebugConsole->insertPlainText(message + tr("\n"));
 }
-void FenPrincipale::on_addAccount_clicked()
+void FenPrincipale::on_gestionAccount_clicked()
 {
-    QString userName = QInputDialog::getText(this, tr("Entrez ..."), tr("Entrez votre nom d'utilisateur."));
-    QString password = QInputDialog::getText(this, tr("Entrez ..."), tr("Entrez le mot-de-passe."), QLineEdit::Password);
-
-    QString classe = QInputDialog::getText(this, tr("Entrez ..."), tr("Entrez votre classe (Format : niveau partie = 4C pour 4ème3 ou 4èmeC"));
-
-    if(SQLServerSupervisor::GetInstance()->CreateAccount(userName, password, classe))
-    {
-        PutMessage(tr("La création de compte a réussi !"));
-    }
-    else
-    {
-        PutMessage(tr("La création de compte a échoué !!"));
-    }
+    accountFen->show();
 }
 void FenPrincipale::on_addHomework_clicked()
 {
@@ -73,6 +68,89 @@ void FenPrincipale::AddDevoir(const QString &nom, const QString &sujet, const QS
         PutMessage(tr("L'ajout d'un devoir a échoué !!"));
     }
     addDevoirFen->hide();
+}
+void FenPrincipale::AddAccount(const QString &userName, const QString &password, const QString &classe)
+{
+    if(SQLServerSupervisor::GetInstance()->CreateAccount(userName, password, classe))
+    {
+        PutMessage(tr("La création de compte a réussi !"));
+    }
+    else
+    {
+        PutMessage(tr("La création de compte a échoué !!"));
+    }
+}
+void FenPrincipale::RemoveAccount(const QString &nom)
+{
+    if(SQLServerSupervisor::GetInstance()->RemoveAccount(nom))
+    {
+        PutMessage(tr("La suppression de compte a réussi !"));
+    }
+    else
+    {
+        PutMessage(tr("La suppression de compte a échoué !!"));
+    }
+}
+void FenPrincipale::RemoveAccount(int id)
+{
+    if(SQLServerSupervisor::GetInstance()->RemoveAccount(id))
+    {
+        PutMessage(tr("La suppression de compte a réussi !"));
+    }
+    else
+    {
+        PutMessage(tr("La suppression de compte a échoué !!"));
+    }
+}
+void FenPrincipale::SearchInformation(const QString &nom)
+{
+    SQLServerSupervisor::GetInstance()->BeginCustomQuery();
+
+    QSqlQuery* query = SQLServerSupervisor::GetInstance()->GetObjQuery();
+
+    query->prepare(tr("SELECT `ID`, `Password`, `Classe` FROM `accounts` WHERE `UserName` = ? LIMIT 1;"));
+    query->bindValue(0, nom);
+
+    if(!query->exec())
+    {
+        qDebug() << "Erreur lors d'une requête personnalisée.";
+    }
+    else
+    {
+        query->first();
+        int ID = query->value(0).toInt();
+        QString Password = query->value(1).toString();
+        QString Classe = query->value(2).toString();
+
+        accountFen->GetInformation(ID, nom, Password, Classe);
+    }
+
+    SQLServerSupervisor::GetInstance()->EndCustomQuery();
+}
+void FenPrincipale::SearchInformation(int ID)
+{
+    SQLServerSupervisor::GetInstance()->BeginCustomQuery();
+
+    QSqlQuery* query = SQLServerSupervisor::GetInstance()->GetObjQuery();
+
+    query->prepare(tr("SELECT `UserName`, `Password`, `Classe` FROM `accounts` WHERE `ID` = ? LIMIT 1;"));
+    query->bindValue(0, ID);
+
+    if(!query->exec())
+    {
+        qDebug() << "Erreur lors d'une requête personnalisée.";
+    }
+    else
+    {
+        query->first();
+        QString nom = query->value(0).toString();
+        QString Password = query->value(1).toString();
+        QString Classe = query->value(2).toString();
+
+        accountFen->GetInformation(ID, nom, Password, Classe);
+    }
+
+    SQLServerSupervisor::GetInstance()->EndCustomQuery();
 }
 
 void FenPrincipale::on_removeHomework_clicked()
