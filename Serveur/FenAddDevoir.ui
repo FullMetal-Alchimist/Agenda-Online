@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FenAddDevoir</class>
+ <widget class="QDialog" name="FenAddDevoir">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>472</width>
+    <height>394</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="1" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QPushButton" name="addDevoir">
+       <property name="text">
+        <string>Ajouter</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="cancelDevoir">
+       <property name="text">
+        <string>Annuler</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0">
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="nomDuDevoirLabel">
+       <property name="text">
+        <string>Nom du devoir: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="DevoirName"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="matiReDuDevoirLabel">
+       <property name="text">
+        <string>Matière du devoir: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="matiereDevoir"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="sujetDuDevoirLabel">
+       <property name="text">
+        <string>Sujet du devoir: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QPlainTextEdit" name="sujetDevoir"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="dateLabel">
+       <property name="text">
+        <string>Date: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QCalendarWidget" name="calendar"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="classeLabel">
+       <property name="text">
+        <string>Classe: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="classeDevoir"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
