@@ -5,12 +5,18 @@ FenPrincipale::FenPrincipale(QWidget *parent) :
 {
     setupUi(this);
     manager = new ServerManager(this);
+    addDevoirFen = new FenAddDevoir(this);
 
     ChatServeur* baseChat = new ChatServeur;
     MainServeur* baseMain = new MainServeur;
 
     manager->AddServeur(baseChat);
     manager->AddServeur(baseMain);
+
+    manager->Connect(baseChat, SIGNAL(message(QString)), this, SLOT(PutMessage(QString)));
+    manager->Connect(baseMain, SIGNAL(message(QString)), this, SLOT(PutMessage(QString)));
+    manager->Connect(baseMain, SIGNAL(newClient(QString,QString)), this, SLOT(AddClient(QString,QString)));
+    manager->Connect(baseMain, SIGNAL(removeClient(QString,QString)), this, SLOT(RemoveClient(QString,QString)));
 
     DebugConsole->setReadOnly(true);
 
@@ -19,13 +25,10 @@ FenPrincipale::FenPrincipale(QWidget *parent) :
         PutMessage(tr("Le serveur est mis en place ! Les clients peuvent se connecter!"));
     }
     else
-        PutMessage(tr("Erreur fatal! Le serveur n'a pas été mis en place, les clients ne peuvent pas se connecter....\n%1").arg(serveur->errorString()));
+        PutMessage(tr("Erreur fatal! Le serveur n'a pas été mis en place, les clients ne peuvent pas se connecter...."));
 
-    connect(manager, SIGNAL(message(QString)), this, SLOT(PutMessage(QString)));
-    connect(manager, SIGNAL(newClient(QString,QString)), this, SLOT(AddClient(QString,QString)));
-    connect(manager, SIGNAL(removeClient(QString,QString)), this, SLOT(RemoveClient(QString,QString)));
     connect(SQLServerSupervisor::GetInstance(), SIGNAL(debug(QString)), this, SLOT(PutMessage(QString)));
-
+    connect(addDevoirFen, SIGNAL(AddDevoir(QString,QString,QString,QString,QDate)), this, SLOT(AddDevoir(QString,QString,QString,QString,QDate)));
 
     initModel();
 }
@@ -57,19 +60,10 @@ void FenPrincipale::on_addAccount_clicked()
 }
 void FenPrincipale::on_addHomework_clicked()
 {
-    QString nom,sujet,matiere,classe;
-    QDate date;
-    QCalendarWidget* calendar = new QCalendarWidget(this);
-    calendar->setGridVisible(true);
-
-    nom = QInputDialog::getText(this, tr("Entrez ..."), tr("Entrez le nom du devoir."));
-    sujet = QInputDialog::getText(this, tr("Entrez ..."), tr("Entrez le sujet."));
-    matiere = QInputDialog::getText(this, tr("Entrez ..."), tr("Entrez la matière."));
-    classe = QInputDialog::getText(this, tr("Entrez ..."), tr("Entrez la classe."));
-    calendar->show();
-    date = calendar->selectedDate();
-    calendar->hide();
-
+    addDevoirFen->show();
+}
+void FenPrincipale::AddDevoir(const QString &nom, const QString &sujet, const QString &matiere, const QString &classe, const QDate &date)
+{
     if(SQLServerSupervisor::GetInstance()->AddHomework(nom, sujet, matiere, classe, date))
     {
         PutMessage(tr("L'ajout d'un devoir a été un succés !"));
@@ -78,7 +72,9 @@ void FenPrincipale::on_addHomework_clicked()
     {
         PutMessage(tr("L'ajout d'un devoir a échoué !!"));
     }
+    addDevoirFen->hide();
 }
+
 void FenPrincipale::on_removeHomework_clicked()
 {
     QString nom = QInputDialog::getText(this, tr("Entrez ..."), tr("Entrez le nom du devoir à supprimer."));

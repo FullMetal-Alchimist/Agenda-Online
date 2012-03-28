@@ -1,29 +1,35 @@
 #ifndef AUTHENTIFICATIONSYSTEM_H
 #define AUTHENTIFICATIONSYSTEM_H
 
-#include <QtCore>
-#include "SQLServerSupervisor.hpp"
+#include <QString>
+#include <QByteArray>
+#include <QMap>
+#include <QPair>
+#include <QSharedPointer>
+#include <QDebug>
 
-class AuthentificationSystem : public QObject
+class AuthentificationSystem
 {
-        Q_OBJECT
     public:
+        typedef QSharedPointer<AuthentificationSystem> AuthentificationSystemPtr;
         enum AuthentificationState
         {
             Accepted,
             InProgress,
-            Refused
+            Refused,
+            NoStartYet
         };
         enum AuthentificationError
         {
             UserName_Not_Available,
             Password_Incorrect,
             Double_Account_Detected,
+            CannotRetrieveAuth,
             NoError,
             Unknown
         };
 
-        AuthentificationSystem(QString const& UserName, QString const& Password, QObject *parent = 0);
+        AuthentificationSystem(QString const& UserName, QString const& Password);
 
         AuthentificationState State() const;
         AuthentificationError Error() const;
@@ -37,7 +43,11 @@ class AuthentificationSystem : public QObject
         bool operator<(const AuthentificationSystem& lhs) const;
         bool operator>(const AuthentificationSystem& lhs) const;
 
-        static AuthentificationSystem* Authentificate(QString const& UserName, QString const& Password);
+        static AuthentificationSystemPtr Authentificate(QString const& UserName, QString const& Password);
+        static AuthentificationSystemPtr CreateAuthentification();
+
+        static AuthentificationSystemPtr RetrieveFromUserNameAndClasse(QString const& UserName, QString const& Classe);
+        static AuthentificationSystemPtr RetrieveFromID(int ID);
 
     private:
         AuthentificationError RetrieveError();
@@ -49,10 +59,10 @@ class AuthentificationSystem : public QObject
         QString m_Classe;
         int m_ID;
 
-        static QMap<int, AuthentificationSystem*> s_Authentifications;
-
-
-
+        static QMap<int, AuthentificationSystemPtr> s_AuthentificationsByID;
+        static QMap<QPair<QString, QString>, AuthentificationSystemPtr> s_AuthentificationsByUC; /** UC = UserName And Classe **/
 };
+
+
 
 #endif // AUTHENTIFICATIONSYSTEM_H

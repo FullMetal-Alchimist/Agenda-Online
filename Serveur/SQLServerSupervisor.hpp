@@ -8,15 +8,20 @@
 #ifndef SQLSERVERSUPERVISOR_HPP
 #define SQLSERVERSUPERVISOR_HPP
 
-#include <QtCore>
-#include <QtSql>
+#include <QByteArray>
+#include <QSqlDatabase>
+#include <QString>
+#include <QSqlQuery>
+#include <QMutex>
+#include <QCryptographicHash>
+#include <QSqlError>
+#include <QStringList>
 
 #include "Devoir.hpp"
+#include "AuthentificationSystem.hpp"
 
 #define SEL_BEFORE "hnnnnnnnnnnnn, -t(bgrvf"
 #define SEL_AFTER "vbg ft-if ,,,,kjinuik"
-
-class AuthentificationSystem;
 
 class SQLServerSupervisor : public QObject
 {
@@ -31,21 +36,21 @@ public:
 
     bool BeginCustomQuery();
     QSqlQuery* GetObjQuery();
-    bool EndCustomQuery();
+    void EndCustomQuery();
 
     QByteArray Hash(QString const& toHash);
 
-    bool Authentificate(QString const& UserName, QByteArray const& Password) const;
-    bool Authentificate(AuthentificationSystem* pSystem) const;
+    bool Authentificate(QString const& UserName, QByteArray const& Password);
+    bool Authentificate(AuthentificationSystem::AuthentificationSystemPtr pSystem);
 
-    QString FindClasse(QString const& UserName) const;
-    int FindID(QString const& UserName) const;
+    QString FindClasse(QString const& UserName);
+    int FindID(QString const& UserName);
 
     QList<Devoir> LoadHomeworks(QString const& Classe, QString const& Matiere = QObject::tr("all"));
-    QList<Devoir> LoadHomeworks(AuthentificationSystem* pSystem, QString const& Matiere = QObject::tr("all"));
+    QList<Devoir> LoadHomeworks(AuthentificationSystem::AuthentificationSystemPtr pSystem, QString const& Matiere = QObject::tr("all"));
 
     QStringList GetAllMatiereFromClasse(QString const& Classe);
-    QStringList GetAllMatiereFromClasse(AuthentificationSystem* pSystem);
+    QStringList GetAllMatiereFromClasse(AuthentificationSystem::AuthentificationSystemPtr pSystem);
 
     QStringList GetAllMatiere();
 

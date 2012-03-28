@@ -11,7 +11,11 @@ HEADERS += \
     AbstractServeur.hpp \
     MainServeur.hpp \
     ChatServeur.hpp \
-    AuthentificationSystem.hpp
+    AuthentificationSystem.hpp \
+    Canal.hpp \
+    Headers.hpp \
+    FenAddDevoir.hpp \
+    FenAccount.hpp
 
 SOURCES += \
     SQLServerSupervisor.cpp \
@@ -22,10 +26,30 @@ SOURCES += \
     AbstractServeur.cpp \
     MainServeur.cpp \
     ChatServeur.cpp \
-    AuthentificationSystem.cpp
+    AuthentificationSystem.cpp \
+    Canal.cpp \
+    FenAddDevoir.cpp \
+    FenAccount.cpp
 
 FORMS += \
-    FenPrincipale.ui
+    FenPrincipale.ui \
+    FenAddDevoir.ui \
+    FenAccount.ui
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

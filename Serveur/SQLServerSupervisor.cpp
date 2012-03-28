@@ -6,7 +6,6 @@
 **************************************************************************/
 
 #include "SQLServerSupervisor.hpp"
-#include "AuthentificationSystem.hpp"
 
 SQLServerSupervisor* SQLServerSupervisor::_instance = NULL;
 QMutex* SQLServerSupervisor::_StaticMutex = new QMutex;
@@ -43,7 +42,7 @@ QByteArray SQLServerSupervisor::Hash(const QString &toHash)
 {
     return QCryptographicHash::hash(QCryptographicHash::hash(SEL_BEFORE, QCryptographicHash::Md5) + toHash.toLatin1() + QCryptographicHash::hash(SEL_AFTER, QCryptographicHash::Md5), QCryptographicHash::Sha1);
 }
-bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArray &Password) const
+bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArray &Password)
 {
     lock.lock();
 
@@ -66,11 +65,11 @@ bool SQLServerSupervisor::Authentificate(const QString &UserName, const QByteArr
         return PasswordHashed == Password.toHex();
     }
 }
-bool SQLServerSupervisor::Authentificate(AuthentificationSystem *pSystem) const
+bool SQLServerSupervisor::Authentificate(AuthentificationSystem::AuthentificationSystemPtr pSystem)
 {
     return Authentificate(pSystem->GetUserName(), pSystem->GetPassword());
 }
-QString SQLServerSupervisor::FindClasse(const QString &UserName) const
+QString SQLServerSupervisor::FindClasse(const QString &UserName)
 {
     lock.lock();
     query->prepare(tr("SELECT `Classe` FROM `accounts` WHERE `UserName` = ?"));
@@ -91,7 +90,7 @@ QString SQLServerSupervisor::FindClasse(const QString &UserName) const
         return classe;
     }
 }
-int SQLServerSupervisor::FindID(const QString &UserName) const
+int SQLServerSupervisor::FindID(const QString &UserName)
 {
     lock.lock();
     query->prepare(tr("SELECT `ID` FROM `accounts` WHERE `UserName` = ?"));
@@ -149,7 +148,7 @@ QList<Devoir> SQLServerSupervisor::LoadHomeworks(const QString &Classe, const QS
 
     return devoirs;
 }
-QList<Devoir> SQLServerSupervisor::LoadHomeworks(AuthentificationSystem *pSystem, const QString &Matiere)
+QList<Devoir> SQLServerSupervisor::LoadHomeworks(AuthentificationSystem::AuthentificationSystemPtr pSystem, const QString &Matiere)
 {
     return LoadHomeworks(pSystem->GetClasse(), Matiere);
 }
@@ -243,7 +242,7 @@ QStringList SQLServerSupervisor::GetAllMatiereFromClasse(const QString &Classe)
 
     return matieres;
 }
-QStringList SQLServerSupervisor::GetAllMatiereFromClasse(AuthentificationSystem *pSystem)
+QStringList SQLServerSupervisor::GetAllMatiereFromClasse(AuthentificationSystem::AuthentificationSystemPtr pSystem)
 {
     return GetAllMatiereFromClasse(pSystem->GetClasse());
 }
@@ -316,7 +315,7 @@ QSqlQuery* SQLServerSupervisor::GetObjQuery()
     return query;
 }
 
-bool SQLServerSupervisor::EndCustomQuery()
+void SQLServerSupervisor::EndCustomQuery()
 {
     return lock.unlock();
 }

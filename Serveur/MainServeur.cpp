@@ -1,45 +1,43 @@
 #include "MainServeur.hpp"
 
-QMap<QString, MainServeur* > MainServeur::m_Clients = QMap<QString, MainServeur* >();
-QSettings MainServeur::s_Settings("SOS Danbou", "Agenda-Online Server");
-
-MainServeur::MainServeur(int handle, QObject *parent) :
-    AbstractServeur(parent), taillePacket(0), UserName(tr("NULLCLIENT")), threadRunning(true), errorFatal(false)
+MainServeur::MainServeur(QObject *parent) :
+    AbstractServeur(parent), taillePacket(0), threadRunning(true), errorFatal(false), m_Authentification(AuthentificationSystem::CreateAuthentification())
 {
 }
-MainServeur* MainServeur::Clone()
+MainServeur* MainServeur::Clone() const
 {
     return new MainServeur(*this);
 }
 
 MainServeur::~MainServeur()
 {
-    if(m_Clients.contains(UserName))
-        m_Clients.remove(UserName);
-    delete myClient;
-    delete m_Authentification;
+    delete m_Client;
 }
 
 void MainServeur::run()
 {
-    myClient = new QTcpSocket;
+    m_Client = new QTcpSocket;
 
-    if(!myClient->setSocketDescriptor(m_Handle))
+    if(!m_Client->setSocketDescriptor(m_Handle))
     {
-        emit message(tr("Error : When setting Socket Descriptor : %1").arg(QString::number(myHandle)));
+        emit message(tr("Error : When setting Socket Descriptor : %1").arg(QString::number(m_Handle)));
         return;
     }
     while((threadRunning) || (!errorFatal))
     {
-        if(myClient->waitForReadyRead(5000))
+        if(m_Client->waitForReadyRead(5000))
         {
-            emit message(tr("Données reçues depuis %1").arg(UserName));
-            processData();
+            if(m_Authentification->State() == AuthentificationSystem::Accepted)
+                emit message(tr("Données reçues depuis %1").arg(m_Authentification->GetUserName()));
+            else
+                emit message(tr("Données reçues depuis un inconnu."));
+
+            ProcessData();
         }
-        myClient->waitForBytesWritten();
+        m_Client->waitForBytesWritten();
         msleep(750);
 
-        if(myClient->state() == QTcpSocket::UnconnectedState)
+        if(m_Client->state() == QTcpSocket::UnconnectedState)
         {
             if(m_Authentification->State() == AuthentificationSystem::Accepted)
                 emit removeClient(m_Authentification->GetUserName(), m_Authentification->GetClasse());
@@ -48,18 +46,18 @@ void MainServeur::run()
     }
 }
 
-void MainServeur::processData()
+void MainServeur::ProcessData()
 {
-    QDataStream in(myClient);
+    QDataStream in(m_Client);
 
     if(taillePacket == 0)
     {
-        if(myClient->bytesAvailable() < (int)sizeof(quint16))
+        if(m_Client->bytesAvailable() < (int)sizeof(quint16))
             return;
 
         in >> taillePacket;
     }
-    if(myClient->bytesAvailable() < taillePacket)
+    if(m_Client->bytesAvailable() < taillePacket)
         return;
 
     quint8 header;
@@ -94,7 +92,7 @@ void MainServeur::processData()
             else
                 emit message(tr("Ping reçu d'un client non authentifié."));
 
-            reponse(SMSG_PONG);
+            Reponse(SMSG_PONG);
             break;
         }
         case CMSG_PONG:
@@ -120,28 +118,28 @@ void MainServeur::processData()
                 emit message(tr("Tentative d'authentification de %1 réussi !").arg(userName));
                 emit newClient(m_Authentification->GetUserName(), m_Authentification->GetClasse());
 
-                reponse(SMSG_AUTHENTIFICATION_SUCCESS);
+                Reponse(SMSG_AUTHENTIFICATION_SUCCESS);
             }
             else if(m_Authentification->Error() == AuthentificationSystem::Double_Account_Detected)
             {
                 emit message(tr("Tentative d'authentification de %1 raté car double compte détectée.").arg(userName));
-                reponse(SMSG_AUTHENTIFICATION_FAILED);
-                Kick("AuthentificationSystem: another account is already connected.");
+                Reponse(SMSG_AUTHENTIFICATION_FAILED);
+                // Kick("AuthentificationSystem: another account is already connected.");
             }
             else if(m_Authentification->Error() == AuthentificationSystem::Password_Incorrect)
             {
                 emit message(tr("Tentative d'authentification de %1 raté car le mot de passe est incorrecte.").arg(userName));
-                reponse(SMSG_AUTHENTIFICATION_FAILED);
+                Reponse(SMSG_AUTHENTIFICATION_FAILED);
             }
             else if(m_Authentification->Error() == AuthentificationSystem::UserName_Not_Available)
             {
                 emit message(tr("Tentative d'authentification de %1 raté car le nom de compte n'existe pas.").arg(userName));
-                reponse(SMSG_AUTHENTIFICATION_FAILED);
+                Reponse(SMSG_AUTHENTIFICATION_FAILED);
             }
             else
             {
                 emit message(tr("Tentative d'authentification de %1 raté, raison inconnue !").arg(userName));
-                reponse(SMSG_AUTHENTIFICATION_FAILED);
+                Reponse(SMSG_AUTHENTIFICATION_FAILED);
             }
 
             break;
@@ -150,7 +148,7 @@ void MainServeur::processData()
         {
             if(!Authentified)
             {
-                reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
+                Reponse(SMSG_YOU_ARE_NOT_AUTHENTIFIED);
                 emit message(tr("Demande de devoir de la part d'un client non authentifié !! (Refusé)"));
                 break;
             }
@@ -208,10 +206,10 @@ void MainServeur::SendHomeworks(const QList<Devoir> &devoirs)
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    ThreadSafe_Write(paquet);
+    ThreadSafe_WriteOnIODevice(m_Client, paquet);
 }
 
-void MainServeur::reponse(quint8 rCode)
+void MainServeur::Reponse(quint8 rCode)
 {
     QByteArray paquet;
     QDataStream out(&paquet, QIODevice::WriteOnly);
@@ -221,7 +219,7 @@ void MainServeur::reponse(quint8 rCode)
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    ThreadSafe_Write(paquet);
+    ThreadSafe_WriteOnIODevice(m_Client, paquet);
 
     emit message(tr("Reponse sended with rCode = %1").arg(QString::number(rCode)));
 }
@@ -236,7 +234,7 @@ void MainServeur::SendPing()
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    ThreadSafe_Write(paquet);
+    ThreadSafe_WriteOnIODevice(m_Client, paquet);
 
     emit message(tr("Ping sended !"));
 }
@@ -252,7 +250,7 @@ void MainServeur::SendMatieres(const QStringList &matieres)
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    ThreadSafe_Write(paquet);
+    ThreadSafe_WriteOnIODevice(m_Client, paquet);
 
     emit message(tr("Matières demandé envoyés."));
 }
@@ -268,7 +266,7 @@ void MainServeur::Kick(QString Reason)
     out.device()->seek(0);
     out << (quint16) (paquet.size() - sizeof(quint16));
 
-    ThreadSafe_Write(paquet);
+    ThreadSafe_WriteOnIODevice(m_Client, paquet);
 
 
     /** By Ryan Lahfa
@@ -276,9 +274,9 @@ void MainServeur::Kick(QString Reason)
     **/
     yieldCurrentThread();
     sleep(1);
-    if(myClient->state() != QAbstractSocket::UnconnectedState)
+    if(m_Client->state() != QAbstractSocket::UnconnectedState)
     {
-        myClient->waitForBytesWritten();
-        myClient->disconnectFromHost();
+        m_Client->waitForBytesWritten();
+        m_Client->disconnectFromHost();
     }
 }

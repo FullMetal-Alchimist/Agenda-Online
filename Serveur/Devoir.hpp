@@ -1,7 +1,10 @@
 #ifndef DEVOIR_HPP
 #define DEVOIR_HPP
 
-#include <QtCore>
+#include <QString>
+#include <QDate>
+#include <QPair>
+#include <QVariant>
 
 class Devoir
 {

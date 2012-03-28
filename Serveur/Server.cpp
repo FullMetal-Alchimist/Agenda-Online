@@ -17,14 +17,19 @@ void Server::incomingConnection(int handle)
     AbstractServeur* serveur = m_BaseType->Clone();
     serveur->setHandle(handle);
 
-    emit message(tr("New incoming connection!"));
+    for(QListIterator<Connection*> it(m_SignalsMapper) ; it.hasNext() ;)
+    {
+        Connection* connection = it.next();
+        QObject::connect(serveur, connection->SignalName, connection->ObjectReceiver, connection->MemberName/*, connection->ConnectionType*/);
+    }
 
-    connect(serveur, SIGNAL(message(QString)), this, SIGNAL(message(QString)));
-    connect(serveur, SIGNAL(newClient(QString,QString)), this, SIGNAL(newClient(QString,QString)));
-    connect(serveur, SIGNAL(removeClient(QString,QString)), this, SIGNAL(removeClient(QString,QString)));
-    connect(serveur, SIGNAL(finished()), this, SLOT(deleteLater()));
+    QObject::connect(serveur, SIGNAL(finished()), this, SLOT(deleteLater()));
 
     serveur->start();
+}
+void Server::connect(const char *signal, const QObject *receiver, const char *member, Qt::ConnectionType connection)
+{
+    m_SignalsMapper << new Connection(signal, member, receiver, connection);
 }
 
 
@@ -32,19 +37,20 @@ ServerManager::ServerManager(QObject *parent) : QObject(parent)
 {
 
 }
-void ServerManager::AddServeur(int Port, AbstractServeur *serveurType)
+void ServerManager::AddServeur(AbstractServeur *serveurType)
 {
     Server* server = new Server(this, serveurType);
-    server->listen(QHostAddress::Any, Port);
-
-    connect(server, SIGNAL(message(QString)), this, SIGNAL(message(QString)));
-    connect(server, SIGNAL(newClient(QString,QString)), this, SIGNAL(newClient(QString,QString)));
-    connect(server, SIGNAL(removeClient(QString,QString)), this, SIGNAL(removeClient(QString,QString)));
 
     m_TcpServers[serveurType] = server;
 }
-void ServerManager::Listen(AbstractServeur *serverAbstract, const QHostAddress &hostAddress, int Port)
+bool ServerManager::Listen(AbstractServeur *serverAbstract, const QHostAddress &hostAddress, int Port)
 {
     if(m_TcpServers.contains(serverAbstract))
-        m_TcpServers[serverAbstract]->listen(hostAddress, port);
+        return m_TcpServers[serverAbstract]->listen(hostAddress, Port);
+    return false;
+}
+void ServerManager::Connect(AbstractServeur *serverAbstract, const char *signal, const QObject *receiver, const char *member, Qt::ConnectionType connection)
+{
+    if(m_TcpServers.contains(serverAbstract))
+        m_TcpServers[serverAbstract]->connect(signal, receiver, member, connection);
 }

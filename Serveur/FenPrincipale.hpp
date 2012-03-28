@@ -1,12 +1,17 @@
 #ifndef FENPRINCIPALE_HPP
 #define FENPRINCIPALE_HPP
 
-#include <QtGui>
-#include "Server.hpp"
+#include <QCalendarWidget>
+#include <QStandardItem>
+#include <QInputDialog>
+
 #include "ui_FenPrincipale.h"
 
+#include "Server.hpp"
 #include "MainServeur.hpp"
 #include "ChatServeur.hpp"
+#include "SQLServerSupervisor.hpp"
+#include "FenAddDevoir.hpp"
 
 
 class FenPrincipale : public QWidget, private Ui::FenPrincipale
@@ -27,6 +32,8 @@ class FenPrincipale : public QWidget, private Ui::FenPrincipale
         void on_addHomework_clicked();
         void on_removeHomework_clicked();
 
+        void AddDevoir(QString const&, QString const&, QString const&, QString const&, QDate const&);
+
     private:
         void initModel();
         void SetHeaderData();
@@ -34,6 +41,7 @@ class FenPrincipale : public QWidget, private Ui::FenPrincipale
         ServerManager* manager;
         QMap<QPair<QString, QString>, QStandardItem* > clientsMapped;
         QStandardItemModel* model;
+        FenAddDevoir* addDevoirFen;
 };
 
 #endif // FENPRINCIPALE_HPP
